@@ -225,8 +225,16 @@ class page_action extends tform_actions {
 			$sql = "SELECT ip_address FROM server_ip WHERE server_id = ? AND ip_type = 'IPv6' AND virtualhost = 'y' AND (client_id = 0 OR client_id=?)";
 			$ips = $app->db->queryAllRecords($sql, $server_id, $_SESSION['s']['user']['client_id']);
 			//$ip_select = ($web_config[$server_id]['enable_ip_wildcard'] == 'y')?"<option value='*'>*</option>":"";
-			//$ip_select = "";
-			$ip_select = "<option value=''></option>";
+
+			// If ipv6 is force enabled, not add empty string
+			$app->uses('getconf');
+			$web_config = $app->getconf->get_server_config($this->dataRecord['server_id'], 'web');
+			if ( 'y' === $web_config['vhost_force_ipv6'] and is_array($ips)) {
+				$ip_select = "";
+			} else {
+				$ip_select = "<option value=''></option>";
+			}
+
 			if(is_array($ips)) {
 				foreach( $ips as $ip) {
 					$selected = ($ip["ip_address"] == $this->dataRecord["ipv6_address"])?'SELECTED':'';
