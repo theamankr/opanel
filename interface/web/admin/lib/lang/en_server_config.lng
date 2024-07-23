@@ -364,3 +364,6 @@ $wb['soft_delete_keep_7_txt'] = 'Purge after 7 days';
 $wb['soft_delete_keep_30_txt'] = 'Purge after 30 days';
 $wb['soft_delete_keep_90_txt'] = 'Purge after 90 days';
 $wb['soft_delete_keep_365_txt'] = 'Purge after 365 days';
+$wb['le_auto_cleanup_txt'] = 'Automatically purge unused Let\'s Encrypt certificates';
+$wb['le_auto_cleanup_denylist_txt'] = 'Comma seperated list of domains that should never be purged.';
+$wb['le_auto_cleanup_denylist_note_txt'] = 'Placeholders:';

@@ -30,18 +30,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class letsencrypt {
 
-	/**
-	 * Construct for this class
-	 *
-	 * @return system
-	 */
-	private $base_path = '/etc/letsencrypt';
 	private $renew_config_path = '/etc/letsencrypt/renewal';
 	private $certbot_use_certcommand = false;
-
-	public function __construct(){
-
-	}
 
 	public function get_acme_script() {
 		$acme = explode("\n", shell_exec('which acme.sh /usr/local/ispconfig/server/scripts/acme.sh /root/.acme.sh/acme.sh 2> /dev/null') ?? '');
@@ -123,6 +113,17 @@ class letsencrypt {
 		return $cmd;
 	}
 
+	private function get_certbot_version($certbot_script) {
+		$matches = array();
+		$ret = null;
+		$val = 0;
+		$letsencrypt_version = exec($certbot_script . ' --version  2>&1', $ret, $val);
+		if(preg_match('/^(\S+|\w+)\s+(\d+(\.\d+)+)$/', $letsencrypt_version, $matches)) {
+			$letsencrypt_version = $matches[2];
+		}
+		return $letsencrypt_version;
+	}
+
 	public function get_certbot_command($domains) {
 		global $app;
 
@@ -139,14 +140,8 @@ class letsencrypt {
 		}
 
 		$primary_domain = $domains[0];
-		$matches = array();
-		$ret = null;
-		$val = 0;
 
-		$letsencrypt_version = exec($letsencrypt . ' --version  2>&1', $ret, $val);
-		if(preg_match('/^(\S+|\w+)\s+(\d+(\.\d+)+)$/', $letsencrypt_version, $matches)) {
-			$letsencrypt_version = $matches[2];
-		}
+		$letsencrypt_version = $this->get_certbot_version($letsencrypt);
 		if (version_compare($letsencrypt_version, '0.22', '>=')) {
 			$acme_version = 'https://acme-v02.api.letsencrypt.org/directory';
 		} else {
@@ -181,87 +176,42 @@ class letsencrypt {
 		}
 
 		if(empty($domains)) return false;
-		if(!is_dir($this->renew_config_path)) return false;
 
-		$dir = opendir($this->renew_config_path);
-		if(!$dir) return false;
-
-		$path_scores = array();
+		$all_certificates = $this->get_certificate_list();
+		if (empty($all_certificates)) {
+			return false;
+		}
 
 		$main_domain = reset($domains);
 		sort($domains);
 		$min_diff = false;
 
-		while($file = readdir($dir)) {
-			if($file === '.' || $file === '..' || substr($file, -5) !== '.conf')  continue;
-			$file_path = $this->renew_config_path . '/' . $file;
-			if(!is_file($file_path) || !is_readable($file_path)) continue;
-
-			$fp = fopen($file_path, 'r');
-			if(!$fp) continue;
-
-			$path_scores[$file_path] = array(
-				'domains' => array(),
-				'diff' => 0,
-				'has_main_domain' => false,
-				'cert_paths' => array(
-					'cert' => '',
-					'privkey' => '',
-					'chain' => '',
-					'fullchain' => ''
-				)
-			);
-			$in_list = false;
-			while(!feof($fp) && $line = fgets($fp)) {
-				$line = trim($line);
-				if($line === '') continue;
-				elseif(!$in_list) {
-					if($line == '[[webroot_map]]') $in_list = true;
-
-					$tmp = explode('=', $line, 2);
-					if(count($tmp) != 2) continue;
-					$key = trim($tmp[0]);
-					if($key == 'cert' || $key == 'privkey' || $key == 'chain' || $key == 'fullchain') {
-						$path_scores[$file_path]['cert_paths'][$key] = trim($tmp[1]);
-					}
-
-					continue;
-				}
-
-				$tmp = explode('=', $line, 2);
-				if(count($tmp) != 2) continue;
-
-				$domain = trim($tmp[0]);
-				if($domain == $main_domain) $path_scores[$file_path]['has_main_domain'] = true;
-				$path_scores[$file_path]['domains'][] = $domain;
-			}
-			fclose($fp);
-
-			sort($path_scores[$file_path]['domains']);
-			if(count(array_intersect($domains, $path_scores[$file_path]['domains'])) < 1) {
-				$path_scores[$file_path]['diff'] = false;
+		foreach ($all_certificates as $certificate) {
+			$certificate['has_main_domain'] = in_array($main_domain, $certificate['domains']);
+			$sorted_cert_domains = $certificate['domains'];
+			sort($sorted_cert_domains);
+			if(count(array_intersect($domains, $sorted_cert_domains)) < 1) {
+				$certificate['diff'] = false;
 			} else {
 				// give higher diff value to missing domains than to those that are too much in there
-				$path_scores[$file_path]['diff'] = (count(array_diff($domains, $path_scores[$file_path]['domains'])) * 1.5) + count(array_diff($path_scores[$file_path]['domains'], $domains));
+				$certificate['diff'] = (count(array_diff($domains, $sorted_cert_domains)) * 1.5) + count(array_diff($sorted_cert_domains, $domains));
 			}
-
-			if($min_diff === false || $path_scores[$file_path]['diff'] < $min_diff) $min_diff = $path_scores[$file_path]['diff'];
+			if($min_diff === false || ($certificate['diff'] !== false && $certificate['diff'] < $min_diff)) $min_diff = $certificate['diff'];
 		}
-		closedir($dir);
 
 		if($min_diff === false) return false;
 
 		$cert_paths = false;
-		$used_path = false;
-		foreach($path_scores as $path => $data) {
-			if($data['diff'] === $min_diff) {
-				$used_path = $path;
-				$cert_paths = $data['cert_paths'];
-				if($data['has_main_domain'] == true) break;
+		$used_id = false;
+		foreach ($all_certificates as $certificate) {
+			if($certificate['diff'] === $min_diff) {
+				$used_id = $certificate['id'];
+				$cert_paths = $certificate['cert_paths'];
+				if($certificate['has_main_domain']) break;
 			}
 		}
 
-		$app->log("Let's Encrypt Cert config path is: " . ($used_path ? $used_path : "not found") . ".", LOGLEVEL_DEBUG);
+		$app->log("Let's Encrypt Cert config path is: " . ($used_id ? $used_id : "not found") . ".", LOGLEVEL_DEBUG);
 
 		return $cert_paths;
 	}
@@ -566,5 +516,256 @@ class letsencrypt {
 			$app->log("Let's Encrypt Cert file: $crt_tmp_file does not exist.", LOGLEVEL_DEBUG);
 			return false;
 		}
+	}
+
+	/**
+	 * Gets a list of all installed certificates on this server.
+	 *
+	 * @return array
+	 */
+	public function get_certificate_list() {
+		global $app;
+
+		$use_acme = false;
+		$shell_script = $this->get_acme_script();
+		if ($shell_script) {
+			$use_acme = true;
+		} else {
+			$shell_script = $this->get_certbot_script();
+		}
+		if (!$shell_script) {
+			$app->log("get_certificate_list: did not find acme.sh nor certbot", LOGLEVEL_ERROR);
+			return [];
+		}
+
+		$certs = [];
+		if ($use_acme) {
+			$info = $app->system->system_safe("$shell_script --info");
+			// try to auto-upgrade acme.sh when --info command is not there
+			if ($app->system->last_exec_retcode() != 0) {
+				$app->system->system_safe("$shell_script --upgrade");
+				$info = $app->system->system_safe("$shell_script --info");
+			}
+			if ($app->system->last_exec_retcode() != 0) {
+				$app->log("get_certificate_list: acme.sh --info failed", LOGLEVEL_ERROR);
+				return [];
+			}
+			$info = $this->parse_env_file($info);
+			$cert_dir = $info['CERT_HOME'] ?? $info['LE_CONFIG_HOME'];
+			if (!is_dir($cert_dir)) {
+				$app->log("get_certificate_list: could not find certificate home $cert_dir", LOGLEVEL_ERROR);
+				return [];
+			}
+			$dir = opendir($cert_dir);
+			if(!$dir) {
+				$app->log("get_certificate_list: could not open certificate home $cert_dir", LOGLEVEL_ERROR);
+				return [];
+			}
+			while($path = readdir($dir)) {
+				// valid conf dirs have a . in them
+				if($path === '.' || $path === '..' || strpos($path, '.') === false) {
+					continue;
+				}
+				$full_path = $cert_dir.'/'.$path;
+				if (!is_dir($full_path)) {
+					continue;
+				}
+				$domain = $path;
+				if (preg_match('/_ecc$/', $path)) {
+					$domain = substr($path, 0, -4);
+				}
+				if (!is_file("$full_path/$domain.conf")) {
+					continue;
+				}
+				$certs[] = [
+					'type' => 'acme.sh',
+					'id' => $path,
+					'conf' => $full_path,
+					'cert_paths' => [
+						'cert' => "$full_path/$domain.cer",
+						'privkey' => "$full_path/$domain.key",
+						'fullchain' => "$full_path/fullchain.cer",
+					]
+				];
+			}
+		} else {
+			$letsencrypt_version = $this->get_certbot_version($shell_script);
+			if (version_compare($letsencrypt_version, '0.10.0', '<')) {
+				$app->log("get_certificate_list: certbot version $letsencrypt_version not supported", LOGLEVEL_ERROR);
+				return [];
+			}
+			if(!is_dir($this->renew_config_path)) {
+				$app->log("get_certificate_list: certbot renew dir not found: ".$this->renew_config_path, LOGLEVEL_ERROR);
+				return [];
+			}
+			$dir = opendir($this->renew_config_path);
+			if(!$dir) {
+				$app->log("get_certificate_list: could not open certbot renew dir", LOGLEVEL_ERROR);
+				return [];
+			}
+			while($file = readdir($dir)) {
+				if($file === '.' || $file === '..' || substr($file, -5) !== '.conf')  continue;
+				$file_path = $this->renew_config_path . '/' . $file;
+				if(!is_file($file_path) || !is_readable($file_path)) continue;
+
+				$fp = fopen($file_path, 'r');
+				if(!$fp) continue;
+				$certificate = [
+					'type' => 'certbot',
+					'id' => substr($file, 0, -5),
+					'conf' => $file_path,
+					'cert_paths' => [
+						'cert' => '',
+						'privkey' => '',
+						'chain' => '',
+						'fullchain' => ''
+					]
+				];
+				while(!feof($fp) && $line = fgets($fp)) {
+					$line = trim($line);
+					if($line === '') continue;
+					if($line == '[[webroot_map]]') break;
+					$tmp = explode('=', $line, 2);
+					if(count($tmp) != 2) continue;
+					$key = trim($tmp[0]);
+					if($key == 'cert' || $key == 'privkey' || $key == 'chain' || $key == 'fullchain') {
+						$certificate['cert_paths'][$key] = trim($tmp[1]);
+					}
+				}
+				fclose($fp);
+				$certs[] = $certificate;
+			}
+			closedir($dir);
+		}
+
+		$certificates = [];
+		foreach ($certs as $certificate) {
+			if (!empty($certificate['cert_paths']['cert']) && !empty($certificate['cert_paths']['priv']) && is_file($certificate['cert_paths']['cert']) && is_file($certificate['cert_paths']['priv'])) {
+				$info = $this->extract_x509($certificate['cert_paths']['cert']);
+				if ($info) {
+					$certificates[] = array_merge($certificate, $info);
+				}
+			}
+		}
+		return $certificates;
+	}
+
+	/**
+	 * @param array $certificate the certificate (from get_certificate_list())
+	 *
+	 * @return bool whether the certificate could be removed
+	 */
+	public function remove_certificate($certificate) {
+		global $app;
+
+		if ($certificate['type'] == 'certbot') {
+			$certbot_script = $this->get_certbot_script();
+			if (!$certbot_script) {
+				$app->log("remove_certificate: certbot not found, cannot delete ". $certificate['id'], LOGLEVEL_WARN);
+				return false;
+			}
+			$version = $this->get_certbot_version($certbot_script);
+			if (version_compare($version, '0.10.0', '<')) {
+				$app->log("remove_certificate: certbot is very old. Please update for proper certificate deletion.", LOGLEVEL_WARN);
+			} else {
+				$app->system->safe_exec("$certbot_script delete --cert-name ?", $certificate['id']);
+				if ($app->system->last_exec_retcode() != 0) {
+					$app->log("remove_certificate: certbot delete --cert-name ". $certificate['id']. " failed.", LOGLEVEL_WARN);
+				}
+			}
+			if (is_file($certificate['conf'])) {
+				@rename($certificate['conf'], $certificate['conf'].'.removed');
+				$app->log("remove_certificate: manually move renew conf ". $certificate['conf']. " out of the way.", LOGLEVEL_DEBUG);
+			}
+		} else {
+			if (is_dir($certificate['conf'])) {
+				if (!$app->system->rmdir($certificate['conf'], false)) {
+					$app->log("remove_certificate: could not delete config folder ". $certificate['conf'], LOGLEVEL_WARN);
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private function is_domain_name_or_wildcard($input) {
+		$input = filter_var($input, FILTER_VALIDATE_DOMAIN);
+		if (!$input) {
+			return false;
+		}
+		// $input can still be something like "some. invalid . domain % name", so we check with a simple regex that no unusual things are in domain name
+		return preg_match("/^(\*\.)?[\w\p{L}0-9._-]+$/u", $input);
+	}
+
+	public function extract_x509($cert_file) {
+		global $app;
+		if (!function_exists('openssl_x509_parse')) {
+			$app->log("extract_x509: openssl extension missing", LOGLEVEL_ERROR);
+			return false;
+		}
+		$info = openssl_x509_parse(file_get_contents($cert_file), true);
+		if (!$info) {
+			$app->log("extract_x509: $cert_file could not be parsed", LOGLEVEL_ERROR);
+			return false;
+		}
+		if (empty($info['subject']['CN']) || !$this->is_domain_name_or_wildcard($info['subject']['CN'])) {
+			return false;
+		}
+		$domains = [$info['subject']['CN']];
+		if (!empty($info['extensions']) && !empty($info['extensions']['subjectAltName'])) {
+			$domains = array_filter(array_merge($domains, array_map(function($i) {
+				$parts = explode(':', $i, 2);
+				if (count($parts) < 2) {
+					return false;
+				}
+				$maybe_domain = trim($parts[1]);
+				if (!$this->is_domain_name_or_wildcard($maybe_domain) && !filter_var($maybe_domain, FILTER_VALIDATE_IP)) {
+					return false;
+				}
+				return $maybe_domain;
+			}, explode(',', $info['extensions']['subjectAltName']))));
+			$domains = array_values(array_unique($domains));
+		}
+		if (empty($domains)) {
+			return false;
+		}
+		$valid_from = new DateTime('@' .  $info['validFrom_time_t']);
+		$valid_to = new DateTime('@' .  $info['validTo_time_t']);
+		$now = new DateTime();
+		return [
+			'serialNumber' => $info['serialNumber'],
+			'signatureType' => $info['signatureTypeLN'] ?? '?',
+			'subject' => $info['subject'],
+			'issuer' => $info['issuer'],
+			'domains' => $domains,
+			'is_valid' => $valid_from <= $now && $now <= $valid_to, // TODO: add revokation check (OCSP and/or CRL)
+			'valid_from' => $valid_from,
+			'valid_to' => $valid_to,
+		];
+	}
+
+	private function parse_env_file($lines) {
+		$variables = [];
+		foreach ($lines as $line) {
+			$line = trim($line);
+			// does only handle comment-only lines.
+			// lines like `KEY=Value # inline-comment` are not supported (and normally not used by acme.sh)
+			if (!$line || substr($line, 0, 1) == '#') {
+				continue;
+			}
+			$parts = explode('=', $line, 2);
+			if (count($parts) < 2) {
+				continue;
+			}
+			$key = trim($parts[0]);
+			$value = trim($parts[1]);
+			if (preg_match('/^"(.*)"$/', $value, $matches)) {
+				$value = $matches[1];
+			} elseif (preg_match("/^'(.*)'$/", $value, $matches)) {
+				$value = $matches[1];
+			}
+			$variables[$key] = $value;
+		}
+		return $variables;
 	}
 }

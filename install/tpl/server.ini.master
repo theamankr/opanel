@@ -140,6 +140,8 @@ vhost_proxy_protocol_enabled=n
 vhost_proxy_protocol_protocols=ipv4
 vhost_proxy_protocol_http_port=880
 vhost_proxy_protocol_https_port=8443
+le_auto_cleanup=y
+le_auto_cleanup_denylist=[server_name]
 
 [dns]
 bind_user=root

@@ -560,15 +560,6 @@ $form["tabs"]['mail'] = array(
 			'default' => '2048',
 			'value' => array('1024' => 'weak (1024)', '2048' => 'normal (2048)', '4096' => 'strong (4096)')
 		),
-        'relayhost_password' => array(
-            'datatype' => 'VARCHAR',
-            'formtype' => 'TEXT',
-            'default' => '',
-            'value' => '',
-            'width' => '40',
-            'maxlength' => '255'
-        ),
-
 		'pop3_imap_daemon' => array(
 			'datatype' => 'VARCHAR',
 			'formtype' => 'SELECT',
@@ -1615,6 +1606,20 @@ $form["tabs"]['web'] = array(
 			'formtype' => 'SELECT',
 			'default' => 'reload',
 			'value' => array('reload' => 'Reload', 'restart' => 'Restart'),
+			'width' => '40',
+			'maxlength' => '255'
+		),
+		'le_auto_cleanup' => array(
+			'datatype' => 'VARCHAR',
+			'formtype' => 'CHECKBOX',
+			'default' => 'y',
+			'value' => array(0 => 'n', 1 => 'y')
+		),
+		'le_auto_cleanup_denylist' => array(
+			'datatype' => 'VARCHAR',
+			'formtype' => 'TEXT',
+			'default' => '[server_name]',
+			'value' => '',
 			'width' => '40',
 			'maxlength' => '255'
 		),

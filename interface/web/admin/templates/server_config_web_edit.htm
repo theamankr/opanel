@@ -248,6 +248,17 @@
 					<label class="col-sm-3 control-label"><tmpl_var name="skip_le_check_txt"></label>
 					<div class="col-sm-9"><tmpl_var name="skip_le_check"></div>
 				</div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"><tmpl_var name="le_auto_cleanup_txt"></label>
+                    <div class="col-sm-9"><tmpl_var name="le_auto_cleanup"></div>
+                </div>
+                <div class="form-group">
+                    <label for="le_auto_cleanup_denylist" class="col-sm-3 control-label">{tmpl_var name='le_auto_cleanup_denylist_txt'}</label>
+                    <div class="col-sm-9">
+                        <input type="text" name="CA_path" id="le_auto_cleanup_denylist" value="{tmpl_var name='le_auto_cleanup_denylist'}" class="form-control" />
+                        <br>{tmpl_var name='le_auto_cleanup_denylist_note_txt'} <a href="javascript:void(0);" class="addPlaceholder">[server_name]</a>
+                    </div>
+                </div>
 	  <!-- End content -->
 	  </div>
 	</div>
