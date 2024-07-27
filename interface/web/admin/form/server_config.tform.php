@@ -1609,6 +1609,12 @@ $form["tabs"]['web'] = array(
 			'width' => '40',
 			'maxlength' => '255'
 		),
+		'le_signature_type' => array(
+			'datatype' => 'VARCHAR',
+			'formtype' => 'SELECT',
+			'default' => 'ECDSA',
+			'value' => array('RSA' => 'RSA (RSA encryption with SHA-256)', 'ECDSA' => 'ECDSA (Elliptic Curve Digital Signature Algorithm)')
+		),
 		'le_auto_cleanup' => array(
 			'datatype' => 'VARCHAR',
 			'formtype' => 'CHECKBOX',
@@ -1616,6 +1622,16 @@ $form["tabs"]['web'] = array(
 			'value' => array(0 => 'n', 1 => 'y')
 		),
 		'le_auto_cleanup_denylist' => array(
+			'validators' => array(
+				array (
+					'type' => 'CUSTOM',
+					'class' => 'validate_domain',
+					'function' => 'domain_glob_list',
+					'allowempty' => 'y',
+					'exceptions' => array('[server_name]'),
+					'errmsg'=> 'le_auto_cleanup_denylist_error_custom'
+				),
+			),
 			'datatype' => 'VARCHAR',
 			'formtype' => 'TEXT',
 			'default' => '[server_name]',

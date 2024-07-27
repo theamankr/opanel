@@ -278,5 +278,30 @@ class validate_domain {
 		return true; // admin may always add wildcard domain
 	}
 
+	/**
+	 * Validates that input is a comma separated list of domain globs.
+	 */
+	function domain_glob_list($field_name, $field_value, $validator) {
+		global $app;
+		$allowempty = $validator['allowempty'] ?: 'n';
+		$exceptions = $validator['exceptions'] ?: [];
+		if (!$field_value) {
+			if ($allowempty == 'y') {
+				return '';
+			}
+			return $this->get_error($validator['errmsg']);
+		}
+		$parts = explode(',', $field_value);
+		foreach ($parts as $part) {
+			$part = trim($part);
+			if (in_array($part, $exceptions, true)) {
+				continue;
+			}
+			if (!preg_match("/^[a-z0-9*._-]+$/i", $part) || !filter_var($part, FILTER_VALIDATE_DOMAIN)) {
+				return $this->get_error($validator['errmsg']);
+			}
+		}
+		return '';
+	}
 
 }
