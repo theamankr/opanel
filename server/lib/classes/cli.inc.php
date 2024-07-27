@@ -30,52 +30,52 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class cli {
 
-    private $cmd_opt = array();
+	private $cmd_opt = array();
 
-    // Add commandline option map
-    protected function addCmdOpt($cmd_opt) {
-        $this->cmd_opt = $cmd_opt;
-    }
+	// Add commandline option map
+	protected function addCmdOpt($cmd_opt) {
+		$this->cmd_opt = $cmd_opt;
+	}
 
-    // Get commandline option map
-    protected function getCmdOpt() {
-        return $this->cmd_opt;
-    }
+	// Get commandline option map
+	protected function getCmdOpt() {
+		return $this->cmd_opt;
+	}
 
-    // Run command module
-    public function process($arg) {
-        $function = '';
-        $opt_string = '';
-        $last_arg = 1;
-        for($n = 1; $n < count($arg); $n++) {
-            $a = ($n > 1)?$a.':'.$arg[$n]:$arg[$n];
-            if(isset($this->cmd_opt[$a])) {
-                $function = $this->cmd_opt[$a];
-                $last_arg = $n + 1;
-            }
-        }
+	// Run command module
+	public function process($arg) {
+		$function = '';
+		$opt_string = '';
+		$last_arg = 1;
+		for($n = 1; $n < count($arg); $n++) {
+			$a = ($n > 1) ? $a . ':' . $arg[$n] : $arg[$n];
+			if(isset($this->cmd_opt[$a])) {
+				$function = $this->cmd_opt[$a];
+				$last_arg = $n + 1;
+			}
+		}
 
 		// Check function name
-		if(!preg_match("/[a-z0-9\-]{0,20}/",$function)) die("Invalid commandline option\n");
+		if(!preg_match("/[a-z0-9\-]{0,20}/", $function)) die("Invalid commandline option\n");
 
-        // Build new arg array of the remaining arguments
-        $new_arg = [];
-        if($last_arg < count($arg)) {
-            for($n = $last_arg; $n < count($arg); $n++) {
-                $new_arg[] = $arg[$n];
-            }
-        }
-        
-        if($function != '') {
-            $this->$function($new_arg);
-        } else {
+		// Build new arg array of the remaining arguments
+		$new_arg = [];
+		if($last_arg < count($arg)) {
+			for($n = $last_arg; $n < count($arg); $n++) {
+				$new_arg[] = $arg[$n];
+			}
+		}
+
+		if($function != '') {
+			$this->$function($new_arg);
+		} else {
 			$this->showHelp($new_arg);
-            //$this->error("Invalid option");
-        }
-    }
+			//$this->error("Invalid option");
+		}
+	}
 
-    // Query function
-    public function simple_query($query, $answers, $default, $name = '') {
+	// Query function
+	public function simple_query($query, $answers, $default, $name = '') {
 		global $autoinstall, $autoupdate;
 		$finished = false;
 		do {
@@ -93,7 +93,7 @@ class cli {
 				}
 			} else {
 				$answers_str = implode(',', $answers);
-				$this->swrite($this->lng($query).' ('.$answers_str.') ['.$default.']: ');
+				$this->swrite($this->lng($query) . ' (' . $answers_str . ') [' . $default . ']: ');
 				$input = $this->sread();
 			}
 
@@ -115,7 +115,7 @@ class cli {
 				$finished = true;
 			}
 
-		} while ($finished == false);
+		} while($finished == false);
 		$this->swriteln();
 		return $answer;
 	}
@@ -135,7 +135,7 @@ class cli {
 				$input = $autoupdate[$name];
 			}
 		} else {
-			$this->swrite($this->lng($query).' ['.$default.']: ');
+			$this->swrite($this->lng($query) . ' [' . $default . ']: ');
 			$input = $this->sread();
 		}
 
@@ -145,31 +145,31 @@ class cli {
 			die();
 		}
 
-		$answer =  ($input == '') ? $default : $input;
+		$answer = ($input == '') ? $default : $input;
 		$this->swriteln();
 		return $answer;
 	}
 
-    public function lng($text) {
+	public function lng($text) {
 		return $text;
 	}
 
-    public function sread() {
-        $input = fgets(STDIN);
-        return rtrim($input);
-    }
-    
-    public function swrite($text = '') {
-        echo $text;
-    }
-    
-    public function swriteln($text = '') {
-        echo $text."\n";
-    }
+	public function sread() {
+		$input = fgets(STDIN);
+		return rtrim($input);
+	}
 
-    public function error($msg) {
-        $this->swriteln($msg);
-        die();
-    }
+	public function swrite($text = '') {
+		echo $text;
+	}
+
+	public function swriteln($text = '') {
+		echo $text . "\n";
+	}
+
+	public function error($msg) {
+		$this->swriteln($msg);
+		die();
+	}
 
 }
