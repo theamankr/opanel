@@ -87,8 +87,8 @@ class letsencrypt {
 			'R=0 ; C=0',
 			$acme_sh . ' --issue ' . $domain_args . ' -w /usr/local/ispconfig/interface/acme --always-force-new-domain-key ' . $conf_selection_arg . $certificate_type_arg,
 			'R=$?',
-			'if [ $R -eq 0 -o $R -eq 2 ]',
-			'  then ' . $acme_sh . ' --install-cert ' . $domain_args . $conf_selection_arg . $files_to_install . ' --reloadcmd ' . escapeshellarg($this->get_reload_command($server_type)),
+			'if [ $R -eq 0 ] || [ $R -eq 2 ]; then :',
+			'  ' . $acme_sh . ' --install-cert ' . $domain_args . $conf_selection_arg . $files_to_install . ' --reloadcmd ' . escapeshellarg($this->get_reload_command($server_type)),
 			'  C=$?',
 			'fi',
 			'if [ $C -eq 0 ]',
@@ -521,41 +521,71 @@ class letsencrypt {
 
 		$candidates = [];
 		if($use_acme) {
-			$info = $app->system->system_safe($shell_script . ' --info 2>/dev/null');
-			// try to auto-upgrade acme.sh when --info command is not there
-			if($app->system->last_exec_retcode() != 0) {
-				$app->system->system_safe($shell_script . ' --upgrade 2>&1');
-				$info = $app->system->system_safe($shell_script . ' --info 2>/dev/null');
-			}
-			if($app->system->last_exec_retcode() != 0) {
-				$app->log('get_certificate_list: acme.sh --info failed', LOGLEVEL_ERROR);
+			// Use an inline shell script to get the configured acme.sh certificate home.
+			// We use a shell script because acme.sh config file is a shell script itself - to support even dynamic configs, we will evaluate the config file.
+			// The used --info command was not always there, so we try to auto-upgrade acme.sh when the command fails
+			$home_extract_cmd = join(' ; ', [
+				'_info() { :',
+				'  _info_stdout=$(' . escapeshellarg($shell_script) . ' --info 2>/dev/null)',
+				'  _info_ret=$?',
+				'}',
+				'_echo_home() { :',
+				'  eval "$_info_stdout"',
+				'  _info_ret=$?',
+				'  if [ $_info_ret -eq 0 ]; then :',
+				'    if [ -z "$CERT_HOME" ]',
+				'      then echo "$LE_CONFIG_HOME"',
+				'      else echo "$CERT_HOME"',
+				'    fi',
+				'   else :',
+				'     echo "Error eval-ing --info output (exit code $_info_ret). stdout was: $_info_stdout"',
+				'     exit 1',
+				'  fi',
+				'}',
+				'_info',
+				'if [ $_info_ret -eq 0 ]; then :',
+				'  _echo_home',
+				'else :',
+				'  if ' . escapeshellarg($shell_script) . ' --upgrade 2>&1; then :',
+				'    _info',
+				'    if [ $_info_ret -eq 0 ]; then :',
+				'      _echo_home',
+				'    else :',
+				'      echo "--info failed (exit code $_info_ret). stdout was: $_info_stdout"',
+				'      exit 1',
+				'    fi',
+				'  else :',
+				'    echo "--info failed (exit code $_info_ret) and auto-upgrade failed, too. Initial info stdout was: $_info_stdout"',
+				'    exit 1',
+				'  fi',
+				'fi',
+			]);
+			$ret = 0;
+			$cert_home = [];
+			exec($home_extract_cmd, $cert_home, $ret);
+			$cert_home = trim(implode("\n", $cert_home));
+			if($ret != 0 || empty($cert_home) || !is_dir($cert_home)) {
+				$app->log('get_certificate_list: could not find certificate home. Error: ' . $cert_home . '. Command used: ' . $home_extract_cmd, LOGLEVEL_ERROR);
 				return [];
 			}
-			$info = $this->parse_env_file($info);
-			$cert_dir = !empty($info['CERT_HOME']) ? $info['CERT_HOME'] : $info['LE_CONFIG_HOME'];
-			if(empty($cert_dir) || !is_dir($cert_dir)) {
-				$app->log('get_certificate_list: could not find certificate home ' . $cert_dir, LOGLEVEL_ERROR);
-				return [];
-			}
-			$dir = opendir($cert_dir);
+			$app->log('get_certificate_list: discovered cert home as ' . $cert_home . '. Command used: ' . $home_extract_cmd, LOGLEVEL_DEBUG);
+			$dir = opendir($cert_home);
 			if(!$dir) {
-				$app->log('get_certificate_list: could not open certificate home ' . $cert_dir, LOGLEVEL_ERROR);
+				$app->log('get_certificate_list: could not open certificate home ' . $cert_home, LOGLEVEL_ERROR);
 				return [];
 			}
 			while($path = readdir($dir)) {
+				$full_path = $cert_home . '/' . $path;
 				// valid conf dirs have a . in them
-				if($path === '.' || $path === '..' || strpos($path, '.') === false) {
-					continue;
-				}
-				$full_path = $cert_dir . '/' . $path;
-				if(!is_dir($full_path)) {
+				if($path === '.' || $path === '..' || strpos($path, '.') === false || !is_dir($full_path)) {
 					continue;
 				}
 				$domain = $path;
 				if(preg_match('/_ecc$/', $path)) {
 					$domain = substr($path, 0, -4);
 				}
-				if(!$this->is_readable_link_or_file("$full_path/$domain.conf")) {
+				if(!$this->is_readable_link_or_file($full_path . '/' . $domain . '.conf')) {
+					$app->log('get_certificate_list: skip ' . $full_path . '/' . $domain . '.conf because it is not readable', LOGLEVEL_DEBUG);
 					continue;
 				}
 				$candidates[] = [
@@ -666,7 +696,7 @@ class letsencrypt {
 			}
 		} else {
 			if(is_dir($certificate['conf'])) {
-				if(!$app->system->rmdir($certificate['conf'], false)) {
+				if(!$app->system->rmdir($certificate['conf'], true)) {
 					$app->log('remove_certificate: could not delete config folder ' . $certificate['conf'], LOGLEVEL_WARN);
 					return false;
 				}
@@ -738,7 +768,7 @@ class letsencrypt {
 			$signature_type = 'ECDSA';
 		}
 		return [
-			'serial_number' => $info['serialNumber'],
+			'serial_number' => $info['serialNumberHex'] ?: $info['serialNumber'],
 			'signature_type' => $signature_type,
 			'subject' => $info['subject'],
 			'issuer' => $info['issuer'],
@@ -761,30 +791,5 @@ class letsencrypt {
 
 	private function is_readable_link_or_file($path) {
 		return $path && (@is_link($path) || @is_file($path)) && @is_readable($path);
-	}
-
-	private function parse_env_file($lines) {
-		$variables = [];
-		foreach($lines as $line) {
-			$line = trim($line);
-			// does only handle comment-only lines.
-			// lines like `KEY=Value # inline-comment` are not supported (and normally not used by acme.sh)
-			if(!$line || substr($line, 0, 1) == '#') {
-				continue;
-			}
-			$parts = explode('=', $line, 2);
-			if(count($parts) < 2) {
-				continue;
-			}
-			$key = trim($parts[0]);
-			$value = trim($parts[1]);
-			if(preg_match('/^"(.*)"$/', $value, $matches)) {
-				$value = $matches[1];
-			} elseif(preg_match("/^'(.*)'$/", $value, $matches)) {
-				$value = $matches[1];
-			}
-			$variables[$key] = $value;
-		}
-		return $variables;
 	}
 }
