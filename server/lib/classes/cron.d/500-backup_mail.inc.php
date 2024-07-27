@@ -58,7 +58,7 @@ class cronjob_backup_mail extends cronjob {
 		$server_config = $app->getconf->get_server_config($conf['server_id'], 'server');
 		$mail_config = $app->getconf->get_server_config($conf['server_id'], 'mail');
 		$global_config = $app->getconf->get_global_config('sites');
-		
+
 		$backup_dir = trim($server_config['backup_dir']);
 		$backup_dir_permissions =0750;
 
@@ -92,7 +92,7 @@ class cronjob_backup_mail extends cronjob {
 					$domain_rec=$app->db->queryOneRecord("SELECT * FROM mail_domain WHERE domain = ?", $domain);
 
 					if($rec['backup_interval'] == 'daily' or ($rec['backup_interval'] == 'weekly' && date('w') == 0) or ($rec['backup_interval'] == 'monthly' && date('d') == '01')) {
-						
+
 						$backupusername = 'root';
 						$backupgroup = 'root';
 						if ($global_config['backups_include_into_web_quota'] == 'y') {
@@ -112,7 +112,7 @@ class cronjob_backup_mail extends cronjob {
 								$backupusername = $webdomain['system_user'];
 								$backupgroup = $webdomain['system_group'];
 							}
-						}						
+						}
 
 						$mail_backup_dir = $backup_dir.'/mail'.$domain_rec['domain_id'];
 						if(!is_dir($mail_backup_dir)) mkdir($mail_backup_dir, 0750);
@@ -127,7 +127,7 @@ class cronjob_backup_mail extends cronjob {
 							if (empty($this->tmp_backup_dir)) $this->tmp_backup_dir = $rec['maildir'];
 							// Create temporary backup-mailbox
 							$app->system->exec_safe("su -c ?", 'dsync -o plugin/acl= -o plugin/quota= backup -u "'.$rec["email"].'" mdbox:' . $this->tmp_backup_dir . '/backup');
-		
+
 							if($backup_mode == 'userzip') {
 								$mail_backup_file.='.zip';
 								$app->system->exec_safe('cd ? && zip ? -b ? -r backup > /dev/null && rm -rf backup', $this->tmp_backup_dir, $mail_backup_dir.'/'.$mail_backup_file, $backup_tmp);
@@ -142,7 +142,7 @@ class cronjob_backup_mail extends cronjob {
 									$retval = $app->system->last_exec_retcode();
 								}
 							}
-							
+
 							if ($retval != 0) {
 								// Cleanup
 								if(file_exists($this->tmp_backup_dir . '/backup')) {
@@ -154,11 +154,11 @@ class cronjob_backup_mail extends cronjob {
 							$domain_dir=explode('/',$rec['maildir']);
 							$_temp=array_pop($domain_dir);unset($_temp);
 							$domain_dir=implode('/',$domain_dir);
-							
+
 							$parts=explode('/',$rec['maildir']);
 							$source_dir=array_pop($parts);
 							unset($parts);
-							
+
 							//* create archives
 							if($backup_mode == 'userzip') {
 								$mail_backup_file.='.zip';
@@ -175,15 +175,15 @@ class cronjob_backup_mail extends cronjob {
 								$retval = $app->system->last_exec_retcode();
 							}
 						}
-						
-						if($retval == 0 || ($backup_mode != 'userzip' && $retval == 1) || ($backup_mode == 'userzip' && $retval == 12)){// tar can return 1, zip can return 12(due to harmless warings) and still create valid backups
+
+						if($retval == 0 || ($backup_mode != 'userzip' && $retval == 1) || ($backup_mode == 'userzip' && $retval == 12)){// tar can return 1, zip can return 12(due to harmless warnings) and still create valid backups
 							chown($mail_backup_dir.'/'.$mail_backup_file, $backupusername);
 							chgrp($mail_backup_dir.'/'.$mail_backup_file, $backupgroup);
 							chmod($mail_backup_dir.'/'.$mail_backup_file, 0640);
 							/* Insert mail backup record in database */
 							$filesize = filesize($mail_backup_dir.'/'.$mail_backup_file);
 							$sql = "INSERT INTO mail_backup (server_id, parent_domain_id, mailuser_id, backup_mode, tstamp, filename, filesize) VALUES (?, ?, ?, ?, ?, ?, ?)";
-							$app->db->query($sql, $conf['server_id'], $domain_rec['domain_id'], $rec['mailuser_id'], $backup_mode, time(), $mail_backup_file, $filesize);	
+							$app->db->query($sql, $conf['server_id'], $domain_rec['domain_id'], $rec['mailuser_id'], $backup_mode, time(), $mail_backup_file, $filesize);
 							if($app->running_on_slaveserver()) $app->dbmaster->query($sql, $conf['server_id'], $domain_rec['domain_id'], $rec['mailuser_id'], $backup_mode, time(), $mail_backup_file, $filesize);
 							unset($filesize);
 						} else {
@@ -195,7 +195,7 @@ class cronjob_backup_mail extends cronjob {
 									$app->system->exec_safe('rm -rf ?', $rec['maildir'] . '/backup');
 								}
 							}
-							$app->log($mail_backup_file.' NOK:'.implode('',$tmp_output), LOGLEVEL_WARN);
+							$app->log($mail_backup_file.' NOK:'.implode('',$app->system->last_exec_out()), LOGLEVEL_WARN);
 						}
 						/* Remove old backups */
 						$backup_copies = intval($rec['backup_copies']);

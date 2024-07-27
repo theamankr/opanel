@@ -31,8 +31,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class cronjob_clean_mailboxes extends cronjob {
 
 	// should run before quota notify and backup
-	// quota notify and backup is both '0 0 * * *' 
-	
+	// quota notify and backup is both '0 0 * * *'
+
 	// job schedule
 	protected $_schedule = '00 22 * * *';
 
@@ -77,7 +77,7 @@ class cronjob_clean_mailboxes extends cronjob {
 						WHERE maildir_format = 'maildir' AND disableimap = 'n' AND server_id = ?
 							AND (purge_trash_days > 0 OR purge_junk_days > 0)",
 						$server_id);
-		
+
 		if(is_array($records) && !empty($records)) {
 			foreach($records as $email) {
 
@@ -147,7 +147,7 @@ class cronjob_clean_mailboxes extends cronjob {
 		global $app, $conf;
 
 		$sql = "SELECT email FROM mail_user WHERE maildir_format = 'mdbox' AND server_id = ?";
-		$records = $app->db->queryAllRecords($sql, $server_id);
+		$records = $app->db->queryAllRecords($sql, $conf['server_id']);
 
 		if(is_array($records)) {
 			foreach($records as $rec) {
