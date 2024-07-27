@@ -279,25 +279,110 @@ class validate_domain {
 	}
 
 	/**
+	 * Parses $expression to check if it is a valid shell glob pattern.
+	 * Does not support extended glob matching syntax.
+	 *
+	 * @see https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html
+	 * @param string $expression
+	 * @param string $allowed_chars regexp of allowed characters in expression. ? and * are always allowed
+	 * @param string|null $allowed_brace_chars regexp of allowed characters in brace ([...]). Dash is always allowed. If empty, then $allowed_chars will be used
+	 * @return bool
+	 */
+	private function validate_glob($expression, $allowed_chars = '/^.$/u', $allowed_brace_chars = null) {
+		$escaping = false;
+		$in_brace = false;
+		$brace_content = [];
+		$chars = preg_split('//u', $expression, -1, PREG_SPLIT_NO_EMPTY);
+		foreach($chars as $i => $c) {
+			if($in_brace) {
+				// the first char after brace start can be a ].
+				if(($c == ']' && empty($brace_content)) || $c != ']') {
+					$brace_content[] = $c;
+				} else {
+					$in_brace = false;
+					$last_is_dash = false;
+					foreach($brace_content as $bi => $bc) {
+						// dashes are always allowed
+						if($bc == '-') {
+							// ... but we consider consecutive dashes as invalid
+							if($last_is_dash) {
+								return false;
+							}
+							// ... and need to validate it as allowed char when it is first or last
+							if(($bi == 0 || $bi == count($brace_content) - 1) && !preg_match($allowed_brace_chars ?: $allowed_chars, '-')) {
+								return false;
+							}
+							$last_is_dash = true;
+						} else {
+							$last_is_dash = false;
+							// negate chars are always allowed
+							if($bi == 0 && ($bc == '^' || $bc == '!') && count($brace_content) > 1) {
+								continue;
+							}
+							if(!preg_match($allowed_brace_chars ?: $allowed_chars, $bc)) {
+								return false;
+							}
+						}
+					}
+				}
+			} else {
+				$peek = $i == count($chars) - 1 ? '' : $chars[$i + 1];
+				if($c == '\\' && in_array($peek, ['[', ']', '*', '?'])) {
+					$escaping = true;
+					continue;
+				} elseif($c == '[' && !$escaping) {
+					$in_brace = true;
+					$brace_content = [];
+				} elseif($escaping || ($c != '?' && $c != '*')) {
+					if(!preg_match($allowed_chars, $c)) {
+						return false;
+					}
+				}
+				$escaping = false;
+			}
+		}
+		return !$in_brace && !$escaping;
+	}
+
+	/**
 	 * Validates that input is a comma separated list of domain globs.
+	 * Can be used for fnmatch() as input.
 	 */
 	function domain_glob_list($field_name, $field_value, $validator) {
 		global $app;
 		$allowempty = $validator['allowempty'] ?: 'n';
 		$exceptions = $validator['exceptions'] ?: [];
-		if (!$field_value) {
-			if ($allowempty == 'y') {
+		$allow_exception_as_substring = $validator['allow_exception_as_substring'] ?: 'y';
+		if(!$field_value) {
+			if($allowempty == 'y') {
 				return '';
 			}
 			return $this->get_error($validator['errmsg']);
 		}
 		$parts = explode(',', $field_value);
-		foreach ($parts as $part) {
+		foreach($parts as $part) {
 			$part = trim($part);
-			if (in_array($part, $exceptions, true)) {
+			// an empty part means there is a stray comma
+			if(empty($part)) {
+				return $this->get_error($validator['errmsg']);
+			}
+			// allow list placeholders that you will replace with real values at evaluation
+			if(in_array($part, $exceptions, true)) {
 				continue;
 			}
-			if (!preg_match("/^[a-z0-9*._-]+$/i", $part) || !filter_var($part, FILTER_VALIDATE_DOMAIN)) {
+			// optionally do not allow placeholders to be part of an expression
+			if($allow_exception_as_substring == 'n') {
+				foreach($exceptions as $exception) {
+					if(strpos($part, $exception) !== false) {
+						return $this->get_error($validator['errmsg']);
+					}
+				}
+			}
+			// A domain glob needs to:
+			// * be a valid glob with only a-z0-9._- as characters
+			// * have at least one dot in it
+			// * not have two consecutive dots
+			if(!$this->validate_glob($part, '/^[a-z0-9._-]$/ui') || strpos($part, '.') === false || strpos($part, '..') !== false) {
 				return $this->get_error($validator['errmsg']);
 			}
 		}

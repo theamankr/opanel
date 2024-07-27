@@ -1629,6 +1629,7 @@ $form["tabs"]['web'] = array(
 					'function' => 'domain_glob_list',
 					'allowempty' => 'y',
 					'exceptions' => array('[server_name]'),
+					'allow_exception_as_substring' => 'n',
 					'errmsg'=> 'le_auto_cleanup_denylist_error_custom'
 				),
 			),
