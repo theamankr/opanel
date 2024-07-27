@@ -99,7 +99,11 @@ class letsencrypt_cli extends cli {
 					['serial', $certificate['serial_number']],
 					['type', $certificate['signature_type']],
 					['valid', $valid . "\n" . $gray . 'from ' . $ansi_reset . $certificate['valid_from']->format('Y-m-d H:i:s') . "\n" . $gray . 'to   ' . $ansi_reset . $certificate['valid_to']->format('Y-m-d H:i:s')],
-					['revokation', $certificate['is_revoked'] === null ? ($bold_yellow . 'not checked' . $ansi_reset) : $certificate['is_revoked'] ? ($bold_red . 'REVOKED' . $ansi_reset) : ($bold_green . 'not revoked' . $ansi_reset)],
+					['revokation',
+						$certificate['is_revoked'] === null ?
+							($bold_yellow . 'not checked' . $ansi_reset) :
+							($certificate['is_revoked'] ? ($bold_red . 'REVOKED' . $ansi_reset) : ($bold_green . 'not revoked' . $ansi_reset))
+					],
 					['domains', $this->getList($certificate['domains'])],
 					['subject', $this->getAssocArray($certificate['subject'])],
 					['issuer', $this->getAssocArray($certificate['issuer'])],
