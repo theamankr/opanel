@@ -1615,6 +1615,12 @@ $form["tabs"]['web'] = array(
 			'default' => 'ECDSA',
 			'value' => array('RSA' => 'RSA (RSA encryption with SHA-256)', 'ECDSA' => 'ECDSA (Elliptic Curve Digital Signature Algorithm)')
 		),
+		'le_delete_on_site_remove' => array(
+			'datatype' => 'VARCHAR',
+			'formtype' => 'CHECKBOX',
+			'default' => 'y',
+			'value' => array(0 => 'n', 1 => 'y')
+		),
 		'le_auto_cleanup' => array(
 			'datatype' => 'VARCHAR',
 			'formtype' => 'CHECKBOX',
@@ -1639,6 +1645,12 @@ $form["tabs"]['web'] = array(
 			'value' => '',
 			'width' => '40',
 			'maxlength' => '255'
+		),
+		'le_revoke_before_delete' => array(
+			'datatype' => 'VARCHAR',
+			'formtype' => 'CHECKBOX',
+			'default' => 'y',
+			'value' => array(0 => 'n', 1 => 'y')
 		),
 		//#################################
 		// END Datatable fields

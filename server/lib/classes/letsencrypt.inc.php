@@ -666,13 +666,75 @@ class letsencrypt {
 		return $certificates;
 	}
 
+	private $_deny_list = null;
+
+	private function get_deny_list() {
+		global $app, $conf;
+
+		if(is_null($this->_deny_list)) {
+			$server_db_record = $app->db->queryOneRecord("SELECT * FROM server WHERE server_id = ?", $conf['server_id']);
+			$app->uses('getconf');
+			$web_config = $app->getconf->get_server_config($conf['server_id'], 'web');
+
+			$this->_deny_list = empty($web_config['le_auto_cleanup_denylist']) ? [] : array_filter(array_map(function($pattern) use ($server_db_record) {
+				$pattern = trim($pattern);
+				if($server_db_record && $pattern == '[server_name]') {
+					return $server_db_record['server_name'];
+				}
+
+				return $pattern;
+			}, explode(',', $web_config['le_auto_cleanup_denylist'])));
+		}
+		return $this->_deny_list;
+	}
+
 	/**
-	 * @param array $certificate the certificate (from get_certificate_list())
+	 * Checks if $certificate is on the deny list or has a wildcard domain.
+	 * Returns an array of the deny list patterns that matched the certificate.
+	 * An empty array means that the $certificate is not on the deny list.
 	 *
+	 * @param array $certificate
+	 * @return array
+	 */
+	public function check_deny_list($certificate) {
+		$deny_list = $this->get_deny_list();
+		$on_deny_list = [];
+		foreach($certificate['domains'] as $cert_domain) {
+			if(substr($cert_domain, 0, 2) == '*.') {
+				// wildcard domains are always on the deny list
+				$on_deny_list[] = $cert_domain;
+			} else {
+				$on_deny_list = array_merge($on_deny_list, array_filter($deny_list, function($deny_pattern) use ($cert_domain) {
+					return mb_strtolower($deny_pattern) == mb_strtolower($cert_domain) || fnmatch($deny_pattern, $cert_domain, FNM_CASEFOLD);
+				}));
+			}
+		}
+		return array_values(array_unique($on_deny_list));
+	}
+
+	/**
+	 * Remove and maybe revoke a certificate.
+	 * @param array $certificate the certificate (from get_certificate_list())
+	 * @param null|bool $revoke_before_delete try to revoke certificate before deletion. when `null` the configured default is used.
+	 * @param bool $check_deny_list refuse to delete certificate when it is on the servers purge deny list.
 	 * @return bool whether the certificate could be removed
 	 */
-	public function remove_certificate($certificate) {
-		global $app;
+	public function remove_certificate($certificate, $revoke_before_delete = null, $check_deny_list = true) {
+		global $app, $conf;
+
+		if(is_null($revoke_before_delete)) {
+			$app->uses('getconf');
+			$web_config = $app->getconf->get_server_config($conf['server_id'], 'web');
+			$revoke_before_delete = !empty($web_config['le_revoke_before_delete']) && $web_config['le_revoke_before_delete'] == 'y';
+		}
+
+		if($check_deny_list) {
+			$on_deny_list = $this->check_deny_list($certificate);
+			if(!empty($on_deny_list)) {
+				$app->log('remove_certificate: did not remove ' . $certificate['id'] . ' because one of its domains is on deny list or a wildcard domain (' . join(', ', $on_deny_list) . ')', LOGLEVEL_DEBUG);
+				return false;
+			}
+		}
 
 		if($certificate['source'] == 'certbot') {
 			$certbot_script = $this->get_certbot_script();
@@ -681,12 +743,30 @@ class letsencrypt {
 				return false;
 			}
 			$version = $this->get_certbot_version($certbot_script);
-			if(version_compare($version, '0.30.0', '<')) {
-				$app->log('remove_certificate: certbot is very old. Please update for proper certificate deletion.', LOGLEVEL_WARN);
+			if($revoke_before_delete && $this->is_readable_link_or_file($certificate['cert_paths']['cert'])) {
+				if(version_compare($version, '0.22', '>=')) {
+					$server = 'https://acme-v02.api.letsencrypt.org/directory';
+				} else {
+					$server = 'https://acme-v01.api.letsencrypt.org/directory';
+				}
+				$app->system->exec_safe($certbot_script . ' revoke -n --server ? --cert-path ? --reason cessationofoperation 2>&1', $server, $certificate['cert_paths']['cert']);
+				if($app->system->last_exec_retcode() == 0) {
+					$app->log('remove_certificate: certbot revoked ' . $certificate['id'] . ' before deletion', LOGLEVEL_DEBUG);
+				} else {
+					$app->log('remove_certificate: certbot revoke ' . $certificate['id'] . ' before deletion failed: ' . $app->system->last_exec_out(), LOGLEVEL_WARN);
+				}
 			} else {
-				$app->system->exec_safe($certbot_script . ' delete -n --cert-name ? 2>&1', $certificate['id']);
-				if($app->system->last_exec_retcode() != 0) {
-					$app->log('remove_certificate: certbot delete -n --cert-name ' . $certificate['id'] . ' failed.', LOGLEVEL_WARN);
+				$app->log('remove_certificate: certbot skip revoke ' . $certificate['id'] . ' before deletion', LOGLEVEL_DEBUG);
+			}
+			// the revoke command above might already have done the delete
+			if(is_file($certificate['conf'])) {
+				if(version_compare($version, '0.30.0', '<')) {
+					$app->log('remove_certificate: certbot is very old. Please update for proper certificate deletion.', LOGLEVEL_WARN);
+				} else {
+					$app->system->exec_safe($certbot_script . ' delete -n --cert-name ? 2>&1', $certificate['id']);
+					if($app->system->last_exec_retcode() != 0) {
+						$app->log('remove_certificate: certbot delete -n --cert-name ' . $certificate['id'] . ' failed: ' . $app->system->last_exec_out(), LOGLEVEL_WARN);
+					}
 				}
 			}
 			// if the conf file is still lingering around, we move it out of the way
@@ -696,6 +776,26 @@ class letsencrypt {
 			}
 		} else {
 			if(is_dir($certificate['conf'])) {
+				if($revoke_before_delete) {
+					$acme_script = $this->get_acme_script();
+					if($acme_script) {
+						$cert_selection = '';
+						$domain = $certificate['id'];
+						if(substr($domain, -4) == '_ecc') {
+							$cert_selection = '--ecc';
+							$domain = substr($domain, 0, -4);
+						}
+						// 5 = cessationOfOperation, see https://github.com/acmesh-official/acme.sh/wiki/revokecert
+						$app->system->exec_safe($acme_script . ' --revoke --revoke-reason 5 -d ? ' . $cert_selection . ' 2>&1', $domain);
+						if($app->system->last_exec_retcode() == 0) {
+							$app->log('remove_certificate: acme.sh revoked ' . $certificate['id'] . ' before deletion', LOGLEVEL_DEBUG);
+						} else {
+							$app->log('remove_certificate: acme.sh revoke ' . $certificate['id'] . ' before deletion failed: ' . $app->system->last_exec_out(), LOGLEVEL_WARN);
+						}
+					}
+				} else {
+					$app->log('remove_certificate: acme.sh skip revoke ' . $certificate['id'] . ' before deletion', LOGLEVEL_DEBUG);
+				}
 				if(!$app->system->rmdir($certificate['conf'], true)) {
 					$app->log('remove_certificate: could not delete config folder ' . $certificate['conf'], LOGLEVEL_WARN);
 					return false;
@@ -717,9 +817,10 @@ class letsencrypt {
 			return false;
 		}
 		if(empty($info['subject']['CN']) || !$this->is_domain_name_or_wildcard($info['subject']['CN'])) {
-			return false;
+			$domains = [];
+		} else {
+			$domains = [$app->functions->idn_encode($info['subject']['CN'])];
 		}
-		$domains = [$app->functions->idn_encode($info['subject']['CN'])];
 		if(!empty($info['extensions']) && !empty($info['extensions']['subjectAltName'])) {
 			$domains = array_filter(array_merge($domains, array_map(function($i) {
 				global $app;

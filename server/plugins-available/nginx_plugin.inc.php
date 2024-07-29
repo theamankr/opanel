@@ -2183,16 +2183,24 @@ class nginx_plugin {
 			} else {
 				$app->system->exec_safe('umount ? 2>/dev/null', $data['old']['document_root'].'/'.$log_folder);
 			}
+		}
 
-			// remove letsencrypt if it exists (renew will always fail otherwise)
-
-			$old_domain = $data['old']['domain'];
-			if(substr($old_domain, 0, 2) === '*.') {
-				// wildcard domain not yet supported by letsencrypt!
-				$old_domain = substr($old_domain, 2);
+		// remove (and maybe revoke) Let's Encrypt certificate (renew will always fail otherwise)
+		if(!empty($web_config['le_delete_on_site_remove']) && $web_config['le_delete_on_site_remove'] == 'y'
+			&& !empty($data['old']['document_root'])
+			&& $data['old']['ssl_letsencrypt'] == 'y' && $data['old']['ssl'] == 'y') {
+			$app->uses('letsencrypt');
+			$paths = $app->letsencrypt->get_website_certificate_paths(['new' => $data['old']]);
+			$info = $app->letsencrypt->extract_x509($paths['crt']);
+			if($info) {
+				$certificates = $app->letsencrypt->get_certificate_list();
+				foreach($certificates as $certificate) {
+					if($certificate['serial_number'] == $info['serial_number']) {
+						$app->letsencrypt->remove_certificate($certificate);
+						break;
+					}
+				}
 			}
-			$le_conf_file = '/etc/letsencrypt/renewal/' . $old_domain . '.conf';
-			@rename('/etc/letsencrypt/renewal/' . $old_domain . '.conf', '/etc/letsencrypt/renewal/' . $old_domain . '.conf~backup');
 		}
 
 		//* remove mountpoint from fstab

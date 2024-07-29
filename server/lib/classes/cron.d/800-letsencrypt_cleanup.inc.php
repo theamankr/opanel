@@ -36,6 +36,7 @@ class cronjob_letsencrypt_cleanup extends cronjob {
 	public function onRunJob() {
 		global $app, $conf;
 		$app->uses('letsencrypt,ini_parser,getconf');
+		$conf['log_priority'] = LOGLEVEL_DEBUG;
 
 		$server_db_record = $app->db->queryOneRecord("SELECT * FROM server WHERE server_id = ?", $conf['server_id']);
 		if(!$server_db_record || !$server_db_record['web_server']) {
@@ -115,16 +116,6 @@ class cronjob_letsencrypt_cleanup extends cronjob {
 			}
 		}
 
-
-		$deny_list = empty($web_config['le_auto_cleanup_denylist']) ? [] : array_filter(array_map(function($domain) use ($server_db_record) {
-			$domain = trim($domain);
-			if($domain == '[server_name]') {
-				return $server_db_record['server_name'];
-			}
-
-			return $domain;
-		}, explode(',', $web_config['le_auto_cleanup_denylist'])));
-
 		$certificates = $app->letsencrypt->get_certificate_list();
 		foreach($certificates as $certificate) {
 			if(in_array($certificate['serial_number'], $used_serials)) {
@@ -133,24 +124,14 @@ class cronjob_letsencrypt_cleanup extends cronjob {
 				}
 				continue;
 			}
-			foreach($certificate['domains'] as $cert_domain) {
-				if(substr($cert_domain, 0, 2) == '*.') {
-					if($conf['log_priority'] <= LOGLEVEL_DEBUG) {
-						print 'Skip ' . $certificate['id'] . ' because it is a wildcard certificate' . "\n";
-					}
-					continue 2;
+			$on_deny_list = $app->letsencrypt->check_deny_list($certificate);
+			if(!empty($on_deny_list)) {
+				if($conf['log_priority'] <= LOGLEVEL_DEBUG) {
+					print 'Skip ' . $certificate['id'] . ' because one of its domains is on deny list or a wildcard domain (' . join(', ', $on_deny_list) . ')' . "\n";
 				}
-				$on_deny_list = array_filter($deny_list, function($deny_pattern) use ($cert_domain) {
-					return mb_strtolower($deny_pattern) == mb_strtolower($cert_domain) || fnmatch($deny_pattern, $cert_domain, FNM_CASEFOLD);
-				});
-				if(!empty($on_deny_list)) {
-					if($conf['log_priority'] <= LOGLEVEL_DEBUG) {
-						print 'Skip ' . $certificate['id'] . ' because its domain ' . $cert_domain . ' is on deny list (' . join(', ', $on_deny_list) . ')' . "\n";
-					}
-					continue 2;
-				}
+				continue;
 			}
-			if($app->letsencrypt->remove_certificate($certificate)) {
+			if($app->letsencrypt->remove_certificate($certificate, null, false)) {
 				print 'Removed unused certificate ' . $certificate['id'] . "\n";
 			} else {
 				$app->log('Error removing certificate ' . $certificate['id'], LOGLEVEL_WARN);

@@ -369,3 +369,5 @@ $wb['le_auto_cleanup_txt'] = 'Automatically purge unused Let\'s Encrypt certific
 $wb['le_auto_cleanup_denylist_txt'] = 'Domains that should never be purged';
 $wb['le_auto_cleanup_denylist_note_txt'] = 'Comma separated list of domain globs that should not be purged. <br>E.g. <code>mail.*, externally-managed.example.com</code> <br>Placeholders:';
 $wb['le_auto_cleanup_denylist_error_custom'] = 'Invalid list of domain globs';
+$wb['le_delete_on_site_remove_txt'] = 'Delete Let\'s Encrypt certificate on website removal';
+$wb['le_revoke_before_delete_txt'] = 'Revoke a certificate before deleting it (prevents Let\'s Encrypt renewal warnings)';
