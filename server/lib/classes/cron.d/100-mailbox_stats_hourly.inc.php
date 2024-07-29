@@ -101,7 +101,7 @@ class cronjob_mailbox_stats_hourly extends cronjob {
 			}
 
 			// get the next line
-			$line = strtok($log_lines, PHP_EOL);
+			$line = strtok(PHP_EOL);
 		}
 
 		$uniqueUsers = array_unique($updatedUsers);
