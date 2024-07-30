@@ -666,17 +666,20 @@ class letsencrypt {
 		return $certificates;
 	}
 
-	private $_deny_list = null;
+	/** @var array|null */
+	private $_deny_list_domains = null;
+	/** @var array|null */
+	private $_deny_list_serials = null;
 
 	private function get_deny_list() {
 		global $app, $conf;
 
-		if(is_null($this->_deny_list)) {
+		if(is_null($this->_deny_list_domains)) {
 			$server_db_record = $app->db->queryOneRecord("SELECT * FROM server WHERE server_id = ?", $conf['server_id']);
 			$app->uses('getconf');
 			$web_config = $app->getconf->get_server_config($conf['server_id'], 'web');
 
-			$this->_deny_list = empty($web_config['le_auto_cleanup_denylist']) ? [] : array_filter(array_map(function($pattern) use ($server_db_record) {
+			$this->_deny_list_domains = empty($web_config['le_auto_cleanup_denylist']) ? [] : array_filter(array_map(function($pattern) use ($server_db_record) {
 				$pattern = trim($pattern);
 				if($server_db_record && $pattern == '[server_name]') {
 					return $server_db_record['server_name'];
@@ -684,32 +687,55 @@ class letsencrypt {
 
 				return $pattern;
 			}, explode(',', $web_config['le_auto_cleanup_denylist'])));
+
+			$this->_deny_list_domains = array_values(array_unique($this->_deny_list_domains));
+
+			// search certificates the installer creates and automatically add their serial numbers to deny list
+			$this->_deny_list_serials = [];
+			foreach([
+						'/usr/local/ispconfig/interface/ssl/ispserver.crt',
+						'/etc/postfix/smtpd.cert',
+						'/etc/ssl/private/pure-ftpd.pem'
+					] as $possible_cert_file) {
+				$cert = $this->extract_first_certificate($possible_cert_file);
+				if($cert) {
+					$info = $this->extract_x509($cert);
+					if($info) {
+						$app->log('add serial number ' . $info['serial_number'] . ' from ' . $possible_cert_file . ' to deny list', LOGLEVEL_DEBUG);
+						$this->_deny_list_serials[] = $info['serial_number'];
+					}
+				}
+			}
+			$this->_deny_list_serials = array_values(array_unique($this->_deny_list_serials));
 		}
-		return $this->_deny_list;
+		return [$this->_deny_list_domains, $this->_deny_list_serials];
 	}
 
 	/**
 	 * Checks if $certificate is on the deny list or has a wildcard domain.
-	 * Returns an array of the deny list patterns that matched the certificate.
+	 * Returns an array of the deny list patterns and serials numbers that matched the certificate.
 	 * An empty array means that the $certificate is not on the deny list.
 	 *
 	 * @param array $certificate
 	 * @return array
 	 */
 	public function check_deny_list($certificate) {
-		$deny_list = $this->get_deny_list();
+		list($deny_list_domains, $deny_list_serials) = $this->get_deny_list();
 		$on_deny_list = [];
 		foreach($certificate['domains'] as $cert_domain) {
 			if(substr($cert_domain, 0, 2) == '*.') {
 				// wildcard domains are always on the deny list
 				$on_deny_list[] = $cert_domain;
 			} else {
-				$on_deny_list = array_merge($on_deny_list, array_filter($deny_list, function($deny_pattern) use ($cert_domain) {
+				$on_deny_list = array_merge($on_deny_list, array_filter($deny_list_domains, function($deny_pattern) use ($cert_domain) {
 					return mb_strtolower($deny_pattern) == mb_strtolower($cert_domain) || fnmatch($deny_pattern, $cert_domain, FNM_CASEFOLD);
 				}));
 			}
 		}
-		return array_values(array_unique($on_deny_list));
+		if(in_array($certificate['serial_number'], $deny_list_serials, true)) {
+			$on_deny_list[] = $certificate['serial_number'];
+		}
+		return $on_deny_list;
 	}
 
 	/**
@@ -726,6 +752,11 @@ class letsencrypt {
 			$app->uses('getconf');
 			$web_config = $app->getconf->get_server_config($conf['server_id'], 'web');
 			$revoke_before_delete = !empty($web_config['le_revoke_before_delete']) && $web_config['le_revoke_before_delete'] == 'y';
+		}
+
+		if($certificate['is_revoked'] && $revoke_before_delete) {
+			$revoke_before_delete = false;
+			$app->log('remove_certificate: skip revokation of ' . $certificate['id'] . ' because it already is revoked', LOGLEVEL_DEBUG);
 		}
 
 		if($check_deny_list) {
@@ -805,15 +836,20 @@ class letsencrypt {
 		return true;
 	}
 
-	public function extract_x509($cert_file, $chain_file = null) {
+	public function extract_x509($cert_file_or_contents, $chain_file = null) {
 		global $app;
 		if(!function_exists('openssl_x509_parse')) {
 			$app->log('extract_x509: openssl extension missing', LOGLEVEL_ERROR);
 			return false;
 		}
-		$info = openssl_x509_parse(file_get_contents($cert_file), true);
+		$cert_file = false;
+		if(strpos($cert_file_or_contents, '-----BEGIN CERTIFICATE-----') === false) {
+			$cert_file = $cert_file_or_contents;
+			$cert_file_or_contents = file_get_contents($cert_file_or_contents);
+		}
+		$info = openssl_x509_parse($cert_file_or_contents, true);
 		if(!$info) {
-			$app->log('extract_x509: ' . $cert_file . ' could not be parsed', LOGLEVEL_ERROR);
+			$app->log('extract_x509: ' . ($cert_file ?: 'inline certificate') . ' could not be parsed', LOGLEVEL_ERROR);
 			return false;
 		}
 		if(empty($info['subject']['CN']) || !$this->is_domain_name_or_wildcard($info['subject']['CN'])) {
@@ -848,7 +884,7 @@ class letsencrypt {
 		$is_valid = $valid_from <= $now && $now <= $valid_to;
 		$is_revoked = null;
 		// only do online revokation check when cert is valid and we got the required chain
-		if($is_valid && $this->is_readable_link_or_file($chain_file)) {
+		if($is_valid && $cert_file && $this->is_readable_link_or_file($chain_file)) {
 			$ocsp_uri = $app->system->exec_safe('openssl x509 -noout -ocsp_uri -in ? 2>&1', $cert_file);
 			$ocsp_host = parse_url($ocsp_uri ?: '', PHP_URL_HOST);
 			if($ocsp_uri && $ocsp_host) {
@@ -879,6 +915,21 @@ class letsencrypt {
 			'valid_from' => $valid_from,
 			'valid_to' => $valid_to,
 		];
+	}
+
+	private function extract_first_certificate($file) {
+		if(!$this->is_readable_link_or_file($file)) {
+			return false;
+		}
+		$contents = file_get_contents($file);
+		if(!$contents) {
+			return false;
+		}
+		$matches = [];
+		if(!preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/ms', $contents, $matches)) {
+			return false;
+		}
+		return $matches[0];
 	}
 
 	private function is_domain_name_or_wildcard($input) {

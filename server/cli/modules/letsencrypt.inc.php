@@ -65,9 +65,7 @@ class letsencrypt_cli extends cli {
 
 	public function outputCertificate($args) {
 		global $app;
-		if(empty($args)) {
 
-		}
 		if(empty($args)) {
 			$this->swriteln('error: ID of the certificate is missing');
 			$this->showHelp($args);
@@ -93,6 +91,7 @@ class letsencrypt_cli extends cli {
 				$bold_yellow = "\033[1m\033[33m";
 				$gray = "\033[38;5;7m";
 				$valid = ($certificate['is_valid'] ? ($bold_green . 'yes' . $ansi_reset) : ($bold_red . 'no ' . $ansi_reset)) . ' ' . $this->getValidInfo($certificate);
+				$on_deny_list = $app->letsencrypt->check_deny_list($certificate);
 				$table = [
 					['key', 'value'],
 					['id', $certificate['id']],
@@ -110,6 +109,7 @@ class letsencrypt_cli extends cli {
 					['source', $certificate['source']],
 					['conf', $certificate['conf']],
 					['files', $this->getAssocArray($certificate['cert_paths'])],
+					['deny_list', empty($on_deny_list) ? ($bold_green . 'no' . $ansi_reset) : $bold_red . 'yes' . $ansi_reset . "\n" . $this->getList($on_deny_list)],
 				];
 				$this->outputTable($table, ['min_lengths' => [10], 'variable_columns' => '1', 'expand' => true]);
 			} else {
