@@ -36,7 +36,6 @@ class cronjob_letsencrypt_cleanup extends cronjob {
 	public function onRunJob() {
 		global $app, $conf;
 		$app->uses('letsencrypt,ini_parser,getconf');
-		$conf['log_priority'] = LOGLEVEL_DEBUG;
 
 		$server_db_record = $app->db->queryOneRecord("SELECT * FROM server WHERE server_id = ?", $conf['server_id']);
 		if(!$server_db_record || !$server_db_record['web_server']) {
