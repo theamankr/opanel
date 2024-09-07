@@ -36,6 +36,7 @@ class shelluser_jailkit_plugin {
 	var $min_uid = 499;
 	var $data = array();
 	var $jailkit_config = array();
+	var $web = array();
 
 	//* This function is called during ispconfig installation to determine
 	//  if a symlink shall be created for this plugin.
@@ -82,7 +83,10 @@ class shelluser_jailkit_plugin {
 		}
 
 
-		$web = $app->db->queryOneRecord("SELECT * FROM web_domain WHERE domain_id = ?", $data['new']['parent_domain_id']);
+
+		$web = $app->db->queryOneRecord("SELECT * FROM web_domain LEFT JOIN server_php ON web_domain.server_php_id = server_php.server_php_id WHERE `domain_id` = ?", $data["new"]["parent_domain_id"]);
+
+		$this->web = $web;
 
 		if(!$app->system->is_allowed_user($data['new']['username'], false, false)
 			|| !$app->system->is_allowed_user($data['new']['puser'], true, true)
@@ -137,6 +141,8 @@ class shelluser_jailkit_plugin {
 						//* call the ssh-rsa update function
 						$this->_setup_ssh_rsa();
 
+						$this->_setup_php_jailkit();
+
 						$app->system->usermod($data['new']['username'], 0, 0, '', '/usr/sbin/jk_chrootsh', '', '');
 
 						//* Unlock user
@@ -190,7 +196,12 @@ class shelluser_jailkit_plugin {
 		}
 
 		if($app->system->is_user($data['new']['puser'])) {
-			$web = $app->db->queryOneRecord("SELECT * FROM web_domain WHERE domain_id = ?", $data['new']['parent_domain_id']);
+
+
+			$web = $app->db->queryOneRecord("SELECT * FROM web_domain LEFT JOIN server_php ON web_domain.server_php_id = server_php.server_php_id WHERE `domain_id` = ?", $data["new"]["parent_domain_id"]);
+
+			$this->web = $web;
+			$username = $data['new']['username'];
 
 			// Get the UID of the parent user
 			$uid = intval($app->system->getuid($data['new']['puser']));
@@ -222,6 +233,8 @@ class shelluser_jailkit_plugin {
 						$this->_setup_jailkit_chroot();
 
 						$this->_add_jailkit_user();
+
+						$this->_setup_php_jailkit();
 
 						//* call the ssh-rsa update function
 						$this->_setup_ssh_rsa();
@@ -315,6 +328,8 @@ class shelluser_jailkit_plugin {
 	{
 		global $app, $conf;
 
+		$app->load('tpl');
+
 		if (isset($this->jailkit_config) && isset($this->jailkit_config['jailkit_hardlinks'])) {
 			if ($this->jailkit_config['jailkit_hardlinks'] == 'yes') {
 				$options = array('hardlink');
@@ -327,7 +342,10 @@ class shelluser_jailkit_plugin {
 			$options = array('allow_hardlink');
 		}
 
-		$web = $app->db->queryOneRecord("SELECT domain, last_jailkit_hash FROM web_domain WHERE domain_id = ?", $this->data['new']["parent_domain_id"]);
+		$web = $app->db->queryOneRecord("SELECT `domain`, `last_jailkit_hash`, `php_cli_binary` FROM web_domain
+			LEFT JOIN server_php ON web_domain.server_php_id = server_php.server_php_id
+			WHERE `domain_id` = ?", $this->data["new"]["parent_domain_id"]);
+
 
 		$last_updated = preg_split('/[\s,]+/', $this->jailkit_config['jailkit_chroot_app_sections']
 						  .' '.$this->jailkit_config['jailkit_chroot_app_programs']
@@ -345,23 +363,6 @@ class shelluser_jailkit_plugin {
 			$app->log("Added jailkit chroot", LOGLEVEL_DEBUG);
 
 			$this->_add_jailkit_programs($options);
-
-			$app->load('tpl');
-
-			$tpl = new tpl();
-			$tpl->newTemplate("bash.bashrc.master");
-
-			$tpl->setVar('jailkit_chroot', true);
-			$tpl->setVar('domain', $web['domain']);
-			$tpl->setVar('home_dir', $this->_get_home_dir(""));
-
-			$bashrc = $this->data['new']['dir'].'/etc/bash.bashrc';
-			if(@is_file($bashrc) || @is_link($bashrc)) unlink($bashrc);
-
-			file_put_contents($bashrc, $tpl->grab());
-			unset($tpl);
-
-			$app->log("Added bashrc script: ".$bashrc, LOGLEVEL_DEBUG);
 
 			$tpl = new tpl();
 			$tpl->newTemplate("motd.master");
@@ -389,8 +390,11 @@ class shelluser_jailkit_plugin {
 			foreach ($records as $record) {
 				$options[] = 'skip='.$record['web_folder'];
 			}
+			$options['php_cli_binary'] = $web['php_cli_binary'];
 
 			$app->system->update_jailkit_chroot($this->data['new']['dir'], $sections, $programs, $options);
+
+
 		}
 
 		// this gets last_jailkit_update out of sync with master db, but that is ok,
@@ -457,13 +461,28 @@ class shelluser_jailkit_plugin {
 		$app->system->chown($this->data['new']['dir'].$jailkit_chroot_userhome, $this->data['new']['username']);
 		$app->system->chgrp($this->data['new']['dir'].$jailkit_chroot_userhome, $this->data['new']['pgroup']);
 
-		$app->log("Added created jailkit user home in : ".$this->data['new']['dir'].$jailkit_chroot_userhome, LOGLEVEL_DEBUG);
+		$app->log("Added created jailkit user home in: ".$this->data['new']['dir'].$jailkit_chroot_userhome, LOGLEVEL_DEBUG);
 
 		if(!is_dir($this->data['new']['dir'].$jailkit_chroot_puserhome)) mkdir($this->data['new']['dir'].$jailkit_chroot_puserhome, 0750, true);
 		$app->system->chown($this->data['new']['dir'].$jailkit_chroot_puserhome, $this->data['new']['puser']);
 		$app->system->chgrp($this->data['new']['dir'].$jailkit_chroot_puserhome, $this->data['new']['pgroup']);
 
-		$app->log("Added jailkit parent user home in : ".$this->data['new']['dir'].$jailkit_chroot_puserhome, LOGLEVEL_DEBUG);
+		// Create user .my.cnf file
+		$mycnf = $this->data['new']['dir'].$jailkit_chroot_userhome .  '/.my.cnf';
+		if(!file_exists($this->data['new']['dir'].$jailkit_chroot_userhome . '/.my.cnf')) {
+			$app->load('tpl');
+
+			$tpl = new tpl();
+			$tpl->newTemplate("user_my.cnf.master");
+
+			file_put_contents($mycnf, $tpl->grab());
+			$app->system->chown($mycnf, $this->data['new']['username']);
+			$app->system->chgrp($mycnf, $this->data['new']['pgroup']);
+			$app->system->exec_safe("chmod 600 ?", $this->data['new']['dir'].$jailkit_chroot_userhome . '/.my.cnf');
+			$app->log("Added user .my.cnf: ".$this->data['new']['dir'].$jailkit_chroot_userhome . '/.my.cnf', LOGLEVEL_DEBUG);
+		}
+
+		$app->log("Added jailkit parent user home in: ".$this->data['new']['dir'].$jailkit_chroot_puserhome, LOGLEVEL_DEBUG);
 
 
 	}
@@ -672,6 +691,89 @@ class shelluser_jailkit_plugin {
 		// this gets last_jailkit_update out of sync with master db, but that is ok,
 		// as it is only used as a timestamp to moderate the frequency of updating on the slaves
 		$app->db->query("UPDATE `web_domain` SET `last_jailkit_update` = NOW(), `last_jailkit_hash` = NULL WHERE `document_root` = ?", $parent_domain['document_root']);
+	}
+
+
+
+	function _setup_php_jailkit() {
+		global $app;
+
+		// Create .bashrc file
+		$app->load('tpl');
+
+		$tpl = new tpl();
+
+		if($app->system->get_os_type() == "debian" || $app->system->get_os_type() == "ubuntu") {
+			$tpl->newTemplate("bashrc_user_deb.master");
+		} elseif($app->system->get_os_type() == "redhat") {
+			$tpl->newTemplate("bashrc_user_redhat.master");
+		} else {
+			$tpl->newTemplate("bashrc_user_generic.master");
+		}
+
+		// Predefine some template vars
+		$tpl->setVar('jailkit_chroot', 'y');
+		$tpl->setVar('domain', $this->web['domain']);
+		$tpl->setVar('home_dir', $this->_get_home_dir(""));
+
+		$tpl->setVar('use_php_path', false);
+		$tpl->setVar('use_php_alias', false);
+
+
+		if(($this->web['server_php_id'] > 0) && !empty($this->web['php_cli_binary'])) {
+			$php_bin_dir = dirname($this->web['php_cli_binary']);
+
+			if(preg_match('/^(\/usr\/(s)?bin|\/(s)?bin)/', $php_bin_dir)) {
+				$tpl->setVar('use_php_path', false);
+				$tpl->setVar('use_php_alias', true);
+				$tpl->setVar('php_alias', $this->web['php_cli_binary']);
+			} else {
+				$tpl->setVar('use_php_path', true);
+				$tpl->setVar('use_php_alias', false);
+				$tpl->setVar('php_bin_dir', $php_bin_dir);
+			}
+
+			if(!file_exists($this->web['document_root'] . '/' . $this->web['php_cli_binary'])) {
+				$app->log("The PHP cli binary " . $this->web['php_cli_binary'] . " is not available in the jail of the web " . $this->web['domain']  . " / SSH/SFTP user: " . $this->data['new']['username']  . ". Check your Jailkit setup!", LOGLEVEL_DEBUG);
+				$tpl->setVar('use_php_path', false);
+				$tpl->setVar('use_php_alias', false);
+
+				if(!empty($app->system->get_newest_php_bin($this->web['document_root'] . $php_bin_dir))) {
+					$fallback_php = $app->system->get_newest_php_bin($this->web['document_root'] . $php_bin_dir);
+					$fallback_php_bin = str_replace($this->web['document_root'], '', $fallback_php);
+
+					if(!empty($fallback_php) && file_exists($fallback_php_bin)) {
+						if(is_link($this->web['document_root'] . '/etc/alternatives/php') || is_file($this->web['document_root'] . '/etc/alternatives/php')) {
+							unlink($this->web['document_root'] . '/etc/alternatives/php');
+							symlink($fallback_php_bin, $this->web['document_root'] . '/etc/alternatives/php');
+							$app->log("Found " . $fallback_php_bin . " as a fallback for alternatives/php in the jail of ". $this->web['domain'], LOGLEVEL_DEBUG);
+						}
+					}
+				}
+			} else {
+				if($app->system->get_os_type() == "debian" || $app->system->get_os_type() == "ubuntu") {
+					if(is_link($this->web['document_root'] . '/etc/alternatives/php') || is_file($this->web['document_root'] . '/etc/alternatives/php'))
+					{
+						unlink($this->web['document_root'] . '/etc/alternatives/php');
+						symlink($this->web['php_cli_binary'], $this->web['document_root'] . '/etc/alternatives/php');
+					} else {
+						symlink($this->web['php_cli_binary'], $this->web['document_root'] . '/etc/alternatives/php');
+					}
+				}
+			}
+		}
+
+		$bashrc = $this->web['document_root'] . '/home/' . $this->data['new']['username'] . '/.bashrc';
+
+		if(@is_file($bashrc) || @is_link($bashrc)) unlink($bashrc);
+		file_put_contents($bashrc, $tpl->grab());
+		$app->system->chown($bashrc, $this->data['new']['username']);
+		$app->system->chgrp($bashrc, $this->data['new']['pgroup']);
+
+		$app->log("Added bashrc script: " . $bashrc, LOGLEVEL_DEBUG);
+
+		unset($tpl);
+
 	}
 
 } // end class

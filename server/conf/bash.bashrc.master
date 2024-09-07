@@ -12,7 +12,6 @@ fi
 
 ## Change machine hostname to site domain ##
 export HOSTNAME=<tmpl_var name='domain'>
-
 </tmpl_if>
 
 
@@ -61,5 +60,4 @@ fi
 #alias ll='ls -l'
 #alias la='ls -A'
 #alias l='ls -CF'
-
 

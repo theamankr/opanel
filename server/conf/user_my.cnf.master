@@ -1,0 +1,4 @@
+[client]
+port = 3306
+protocol = tcp
+host = 127.0.0.1

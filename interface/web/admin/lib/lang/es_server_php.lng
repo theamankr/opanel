@@ -20,4 +20,6 @@ $wb['php_name_in_use_error'] = 'The name can not be changed.';
 $wb['PHP Sort Priority'] = 'Priority';
 $wb['sortprio_txt'] = 'Priority';
 $wb['sortprio_long_txt'] = 'Priority of PHP version in the PHP version select box<br>Default PHP has prio 0 if enabled<br>Lower value is higher priority';
+$wb['PHP-CLI settings'] = 'PHP-CLI settings';
+$wb['php_cli_binary_txt'] = 'Path to the PHP CLI binary';
 ?>

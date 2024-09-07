@@ -249,6 +249,30 @@ $form["tabs"]['php_fpm'] = array(
 		//#################################
 	)
 );
+$form["tabs"]['php_cli'] = array (
+'title' => "PHP-CLI settings",
+'width' => 80,
+'template' => "templates/server_php_cli_edit.htm",
+'fields' => array(
+	//#################################
+	// Begin Datatable fields
+	//#################################
+	'php_cli_binary' => array(
+		'datatype' => 'VARCHAR',
+		'formtype' => 'TEXT',
+		'filters'   => array(
+				0 => array( 'event' => 'SAVE',
+				'type' => 'STRIPTAGS'),
+				1 => array( 'event' => 'SAVE',
+				'type' => 'STRIPNL')
+		),
+		'default' => '',
+		'value' => '',
+		'width' => '40',
+		'maxlength' => '255'
+	),
+)
+);
 $form["tabs"]['php_sort'] = array (
     	'title' => "PHP Sort Priority",
 	'width' => 80,

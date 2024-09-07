@@ -23,4 +23,5 @@ $wb['command_hint_txt'] = '例如，/var/www/clients/clientX/webY/myscript.sh �
 $wb['log_output_txt'] = '记录输出';
 $wb['limit_cron_url_txt'] = '仅限 URL 计划任务。请将以 https:// 开头的 URL 作为计划任务命令输入。';
 $wb['command_error_empty'] = '命令为空。';
+$wb['domain_not_selected_placeholder_txt'] = 'No domain selected';
 ?>

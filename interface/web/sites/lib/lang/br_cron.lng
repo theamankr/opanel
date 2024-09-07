@@ -24,3 +24,4 @@ $wb['log_output_txt'] = 'Gravar saída do log';
 $wb['limit_cron_url_txt'] = 'Somente URL no Cron. Por favor insira uma URL iniciando com https:// como um comando no Cron.';
 $wb['command_error_empty'] = 'Comando a executar está vazio.';
 $wb['Cron Job'] = 'Tarefas no Cron';
+$wb['domain_not_selected_placeholder_txt'] = 'No domain selected';

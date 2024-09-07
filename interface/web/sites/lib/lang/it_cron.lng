@@ -23,4 +23,5 @@ $wb['limit_cron_url_txt'] = 'Solo URL cron. Per cortesia inserire una URL che in
 $wb['command_error_empty'] = 'Command  vuoto.';
 $wb['command_hint_txt'] = 'esempio: /var/www/clients/clientX/webY/myscript.sh o https://www.mydomain.com/path/script.php, puoi usare [web_root] come sostitutivo che viene rimpiazzato da /var/www/clients/clientX/webY/web.';
 $wb['log_output_txt'] = 'Log output';
-?>
+$wb['domain_not_selected_placeholder_txt'] = 'No domain selected';
+

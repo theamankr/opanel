@@ -1,0 +1,35 @@
+<tmpl_if name='jailkit_chroot' op='==' value='y'>
+## Hack for Jailkit User to change back to the logged in user ##
+if [ -n "$LOGNAME" ]; then
+ if [ "$LOGNAME" != $USER ]; then
+  export HOME=<tmpl_var name='home_dir'>$LOGNAME
+  export USER=$LOGNAME
+  export USERNAME=$LOGNAME
+  cd $HOME
+ fi
+fi
+
+## Change machine hostname to site domain ##
+export HOSTNAME=<tmpl_var name='domain'>
+</tmpl_if>
+
+<tmpl_if name='use_php_path'>
+# Overwrite the PHP cli binaries by using $PATH:
+export PATH=<tmpl_var name='php_bin_dir'>:$PATH
+</tmpl_if>
+<tmpl_if name='use_php_alias'>
+alias php="<tmpl_var name='php_alias'>"
+</tmpl_if>
+
+# Source custom bashrc files
+if [ -d ~/.bashrc.d ]
+then
+	for brc in ~/.bashrc.d/*
+	do
+		if [ -f "$brc" ]; then
+			. "$brc"
+		fi
+	done
+fi
+
+unset brc

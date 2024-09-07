@@ -45,15 +45,39 @@ class validate_cron {
         Validator function to check if a given cron command is in correct form (url only).
     */
 	function command_format($field_name, $field_value, $validator) {
+		global $app, $page;
+
 		if(preg_match("'^(\w+):\/\/'", $field_value, $matches)) {
+			//* Add the {DOMAIN} placeholder to the validation process
+			if(preg_match("/{DOMAIN}/", $field_value)) {
+
+				if(isset($app->remoting_lib->primary_id)) {
+					$cronjob = $app->remoting_lib->dataRecord;
+				} else {
+					$cronjob = $page->dataRecord;
+				}
+
+				if($cronjob['parent_domain_id'] > 0) {
+					$parent_domain = $app->db->queryOneRecord("SELECT `domain` FROM `web_domain` WHERE `domain_id` = ?", $cronjob['parent_domain_id']);
+					$trans = array(
+						'{DOMAIN}' => $parent_domain['domain']
+					);
+				}
+
+				$field_value = strtr($field_value, $trans);
+
+			}
 
 			$parsed = parse_url($field_value);
+
 			if($parsed === false) return $this->get_error($validator['errmsg']);
 
 			if($parsed["scheme"] != "http" && $parsed["scheme"] != "https") return $this->get_error($validator['errmsg']);
+			if(preg_match("'^([a-z0-9][a-z0-9\-]{0,62}\.)+([A-Za-z0-9\-]{2,63})$'i", $parsed["host"]) == false) return $this->get_error($validator['errmsg']);
 
-			if(preg_match("'^([a-z0-9][a-z0-9_\-]{0,62}\.)+([A-Za-z0-9\-]{2,63})$'i", $parsed["host"]) == false) return $this->get_error($validator['errmsg']);
+
 		}
+
 		if(strpos($field_value, "\n") !== false || strpos($field_value, "\r") !== false || strpos($field_value, chr(0)) !== false) {
 			return $this->get_error($validator['errmsg']);
 		}

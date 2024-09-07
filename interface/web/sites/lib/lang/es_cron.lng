@@ -23,4 +23,4 @@ $wb['run_wday_txt'] = 'Días de la semana';
 $wb['server_id_error_empty'] = 'La ID del servidor está vacía.';
 $wb['server_id_txt'] = 'Servidor';
 $wb['unknown_fieldtype_error'] = 'Se ha usado un tipo de campo desconocido.';
-?>
+$wb['domain_not_selected_placeholder_txt'] = 'No domain selected';

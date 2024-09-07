@@ -23,4 +23,4 @@ $wb['limit_cron_url_txt'] = 'Только URL может быть в задан�
 $wb['command_error_empty'] = 'Команда отсутствует.';
 $wb['command_hint_txt'] = 'Например, /var/www/clients/clientX/webY/myscript.sh или https://www.mydomain.com/path/script.php, Вы можете использовать заполнитель [web_root], который заменяется на /var/www/clients/clientX/webY/web.';
 $wb['log_output_txt'] = 'Журнал вывода';
-?>
+$wb['domain_not_selected_placeholder_txt'] = 'No domain selected';

@@ -35,6 +35,8 @@ class shelluser_base_plugin {
 	var $class_name = 'shelluser_base_plugin';
 	var $min_uid = 499;
 	var $data = array();
+	var $web = array();
+
 
 	//* This function is called during ispconfig installation to determine
 	//  if a symlink shall be created for this plugin.
@@ -81,7 +83,12 @@ class shelluser_base_plugin {
 		}
 
 		//* Check if the resulting path is inside the docroot
-		$web = $app->db->queryOneRecord("SELECT * FROM web_domain WHERE domain_id = ?", $data['new']['parent_domain_id']);
+		$web = $app->db->queryOneRecord("SELECT * FROM web_domain
+			LEFT JOIN server_php ON web_domain.server_php_id = server_php.server_php_id
+			WHERE `domain_id` = ?", $data["new"]["parent_domain_id"]);
+
+		$this->web = $web;
+
 		if(substr($data['new']['dir'],0,strlen($web['document_root'])) != $web['document_root']) {
 			$app->log('Directory of the shell user is outside of website docroot.',LOGLEVEL_WARN);
 			return false;
@@ -134,9 +141,18 @@ class shelluser_base_plugin {
 					$app->system->chown($homedir,$data['new']['puser'],false);
 					$app->system->chgrp($homedir,$data['new']['pgroup'],false);
 				}
+
 				$command = 'useradd -d ? -g ? -o'; // non unique
 				$command .= ' -s ? -u ? ?';
 				$app->system->exec_safe($command, $homedir, $data['new']['pgroup'], $data['new']['shell'], $uid, $data['new']['username']);
+
+				//* Create .bashrc.d directory
+				if(!is_dir($homedir.'/.bashrc.d')){
+					$app->file->mkdirs($homedir.'/.bashrc.d', '0750');
+					$app->system->chown($homedir.'/.bashrc.d', $data['new']['username']);
+					$app->system->chgrp($homedir.'/.bashrc.d', $data['new']['pgroup']);
+				}
+
 				$app->log("Executed command: ".$command, LOGLEVEL_DEBUG);
 				$app->log("Added shelluser: ".$data['new']['username'], LOGLEVEL_DEBUG);
 
@@ -168,11 +184,27 @@ class shelluser_base_plugin {
 				$app->system->chmod($homedir.'/.profile', 0644);
 				$app->system->chown($homedir.'/.profile', $data['new']['username']);
 				$app->system->chgrp($homedir.'/.profile', $data['new']['pgroup']);
+				$profile_content = "if [ -f ~/.bashrc ]
+then
+	. ~/.bashrc
+fi
+
+";
+				$app->system->file_put_contents($homedir.'/.profile', $profile_content);
+
+				//* Create .bashrc.d directory
+				if(!is_dir($homedir.'/.bashrc.d')){
+					$app->file->mkdirs($homedir.'/.bashrc.d', '0750');
+					$app->system->chown($homedir.'/.bashrc.d', $data['new']['username']);
+					$app->system->chgrp($homedir.'/.bashrc.d', $data['new']['pgroup']);
+				}
+
+				$this->_add_user_bashrc();
 
 				// Create symlinks for conveniance, SFTP user should not land in an empty dir.
-				symlink('../../web', $homedir.'/web');
-				symlink('../../log', $homedir.'/log');
-				symlink('../../private', $homedir.'/private');
+				if(!is_link($homedir.'/web')) symlink('../../web', $homedir.'/web');
+				if(!is_link($homedir.'/log')) symlink('../../log', $homedir.'/log');
+				if(!is_link($homedir.'/private')) symlink('../../private', $homedir.'/private');
 
 				//* Disable shell user temporarily if we use jailkit
 				if($data['new']['chroot'] == 'jailkit') {
@@ -204,7 +236,12 @@ class shelluser_base_plugin {
 		}
 
 		//* Check if the resulting path is inside the docroot
-		$web = $app->db->queryOneRecord("SELECT * FROM web_domain WHERE domain_id = ?", $data['new']['parent_domain_id']);
+		$web = $app->db->queryOneRecord("SELECT * FROM web_domain
+			LEFT JOIN server_php ON web_domain.server_php_id = server_php.server_php_id
+			WHERE `domain_id` = ?", $data["new"]["parent_domain_id"]);
+
+		$this->web = $web;
+
 		if(substr($data['new']['dir'],0,strlen($web['document_root'])) != $web['document_root']) {
 			$app->log('Directory of the shell user is outside of website docroot.',LOGLEVEL_WARN);
 			return false;
@@ -290,7 +327,7 @@ class shelluser_base_plugin {
 					if(!is_file($data['new']['dir']).'/.bash_history') {
 						$app->system->touch($homedir.'/.bash_history');
 						$app->system->chmod($homedir.'/.bash_history', 0750);
-						$app->system->chown($homedir.'/.bash_history', $data['new']['username']);
+						$app->system->chown($homedir.'/.bash_history', $data['new']['puser']);
 						$app->system->chgrp($homedir.'/.bash_history', $data['new']['pgroup']);
 					}
 
@@ -298,9 +335,25 @@ class shelluser_base_plugin {
 					if(!is_file($data['new']['dir']).'/.profile') {
 						$app->system->touch($homedir.'/.profile');
 						$app->system->chmod($homedir.'/.profile', 0644);
-						$app->system->chown($homedir.'/.profile', $data['new']['username']);
+						$app->system->chown($homedir.'/.profile', $data['new']['puser']);
 						$app->system->chgrp($homedir.'/.profile', $data['new']['pgroup']);
+						$profile_content = "if [ -f ~/.bashrc ]
+then
+	. ~/.bashrc
+fi
+
+";
+						$app->system->file_put_contents($homedir.'/.profile', $profile_content);
 					}
+
+					//* Create .bashrc.d directory
+					if(!is_dir($homedir.'/.bashrc.d')){
+						$app->file->mkdirs($homedir.'/.bashrc.d', '0750');
+						$app->system->chown($homedir.'/.bashrc.d', $data['new']['puser']);
+						$app->system->chgrp($homedir.'/.bashrc.d', $data['new']['pgroup']);
+					}
+
+					$this->_add_user_bashrc();
 
 					//* Add webfolder protection again
 					$app->system->web_folder_protection($web['document_root'], true);
@@ -542,6 +595,57 @@ class shelluser_base_plugin {
 
 	}
 
+
+	function _add_user_bashrc() {
+		global $app;
+
+		// Create .bashrc file
+		$app->load('tpl');
+
+
+		$tpl = new tpl();
+
+		// Predefine some template vars
+		$tpl->setVar('jailkit_chroot', 'n');
+		$tpl->setVar('use_php_path', false);
+		$tpl->setVar('use_php_alias', false);
+
+		if($app->system->get_os_type() == "debian" || $app->system->get_os_type() == "ubuntu") {
+			$tpl->newTemplate("bashrc_user_deb.master");
+		} elseif($app->system->get_os_type() == "redhat") {
+			$tpl->newTemplate("bashrc_user_redhat.master");
+		} else {
+			$tpl->newTemplate("bashrc_user_generic.master");
+		}
+
+		if(($this->web['server_php_id'] > 0) && !empty($this->web['php_cli_binary'])) {
+			$php_bin_dir = dirname($this->web['php_cli_binary']);
+
+			if(preg_match('/^(\/usr\/(s)?bin|\/(s)?bin)/', $php_bin_dir)) {
+				$tpl->setVar('use_php_path', false);
+				$tpl->setVar('use_php_alias', true);
+				$tpl->setVar('php_alias', $this->web['php_cli_binary']);
+			} else {
+				$tpl->setVar('use_php_path', true);
+				$tpl->setVar('use_php_alias', false);
+				$tpl->setVar('php_bin_dir', $php_bin_dir);
+			}
+
+		} elseif(($this->web['server_php_id'] > 0) && empty($this->web['php_cli_binary'])) {
+			$app->log("The PHP cli binary is not set for the selected PHP version. Affected web: " . $this->web['domain'], LOGLEVEL_DEBUG);
+		}
+
+		$bashrc = $this->data['new']['dir'] . '/home/' . $this->data['new']['username'] . '/.bashrc';
+
+		if(@is_file($bashrc) || @is_link($bashrc)) unlink($bashrc);
+
+		file_put_contents($bashrc, $tpl->grab());
+		$app->system->chown($bashrc, $this->data['new']['username']);
+		$app->system->chgrp($bashrc, $this->data['new']['pgroup']);
+		$app->log("Added bashrc script: " . $bashrc, LOGLEVEL_DEBUG);
+		unset($tpl);
+
+	}
 
 } // end class
 

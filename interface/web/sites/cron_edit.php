@@ -78,6 +78,38 @@ class page_action extends tform_actions {
 			$app->tpl->setVar("edit_disabled", 0);
 		}
 
+		$parent_domain = $app->db->queryOneRecord("SELECT `domain_id`, `system_user`, `system_group`, `domain`, `document_root`, `hd_quota`, `php_cli_binary`
+			FROM `web_domain`
+				LEFT JOIN server_php ON web_domain.server_php_id = server_php.server_php_id
+			WHERE `domain_id` = ?", $this->dataRecord["parent_domain_id"]);
+
+
+		if(empty($parent_domain['php_cli_binary'])) {
+			$php_cli_binary = "/usr/bin/php";
+		} else {
+			$php_cli_binary = $parent_domain['php_cli_binary'];
+		}
+
+		if(empty($parent_domain['domain'])) {
+			$domain = $app->tform->wordbook["domain_not_selected_placeholder_txt"];
+		} else {
+			$domain = $parent_domain['domain'];
+		}
+
+		if($this->dataRecord['type'] != 'chrooted') {
+			$web_docroot_client = $parent_domain['document_root'];
+		} else {
+			$web_docroot_client = '';
+		}
+
+		// web folder is hardcoded to /web:
+		$web_docroot_client .= '/web';
+
+		// Example values for placeholders.
+		$app->tpl->setVar("php_cli_binary", $php_cli_binary);
+		$app->tpl->setVar("docroot_client", $web_docroot_client);
+		$app->tpl->setVar("domain", $domain);
+
 		parent::onShowEnd();
 	}
 
@@ -129,6 +161,7 @@ class page_action extends tform_actions {
 			}
 		}
 
+
 		parent::onSubmit();
 	}
 
@@ -148,7 +181,7 @@ class page_action extends tform_actions {
 					$has_error = true;
 				}
 			}
-			
+
 			if($client["limit_cron_type"] == 'url' && $this->dataRecord["type"] != 'url') {
 				$app->error($app->tform->wordbook["limit_cron_url_txt"]);
 				$has_error = true;
@@ -178,7 +211,7 @@ class page_action extends tform_actions {
 					$has_error = true;
 				}
 			}
-			
+
 			if($client["limit_cron_type"] == 'url' && $this->dataRecord["type"] != 'url') {
 				$app->error($app->tform->wordbook["limit_cron_url_txt"]);
 				$has_error = true;

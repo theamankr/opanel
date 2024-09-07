@@ -1458,6 +1458,25 @@ class page_action extends tform_actions {
 		global $app, $conf;
 
 		if(isset($this->dataRecord['folder_directive_snippets'])) $app->db->query("UPDATE web_domain SET folder_directive_snippets = ? WHERE domain_id = ?", $this->dataRecord['folder_directive_snippets'], $this->id);
+
+		// Triggers an update of the website's cronjobs and shell users when the PHP version is changed
+		if(isset($this->dataRecord['server_php_id']) && $this->oldDataRecord['server_php_id'] != $this->dataRecord['server_php_id']) {
+			$cronjob_list = $app->db->queryAllRecords("SELECT * FROM cron WHERE parent_domain_id = ? and active = 'y'", $this->dataRecord['id']);
+			if(is_array($cronjob_list)) {
+				foreach($cronjob_list as $cronjob) {
+					// Only update cronjobs with placeholders
+					if(preg_match("/([\{][a-zA-Z_\-0-9]+[\}]|[\[][a-zA-Z_\-0-9]+[\]])/", $cronjob['command'])) {
+						$app->db->datalogUpdate('cron', $cronjob, 'id', $cronjob['id'], true);
+					}
+				}
+			}
+			$shelluser_list = $app->db->queryAllRecords("SELECT * FROM shell_user WHERE parent_domain_id = ? and active = 'y'", $this->dataRecord['id']);
+			if(is_array($shelluser_list)) {
+				foreach($shelluser_list as $shelluser) {
+						$app->db->datalogUpdate('shell_user', $shelluser, 'shell_user_id', $shelluser['shell_user_id'], true);
+				}
+			}
+		}
 	}
 
 	function validateDefaultFastcgiPhpVersion() {

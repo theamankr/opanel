@@ -248,7 +248,60 @@ if($type == 'getclientssldata'){
 	$json = $app->functions->json_encode($client);
 }
 
-//}
+if($type == 'getcronplaceholders') {
+
+	if(is_array($web_id) && !empty($web_id)) {
+
+		$web_docroot_client = '';
+
+		$web = $app->db->queryOneRecord("SELECT wd.sys_groupid, wd.domain, wd.document_root, sp.php_cli_binary
+			FROM web_domain wd
+				LEFT JOIN server_php sp ON wd.server_php_id = sp.server_php_id
+			WHERE wd.domain_id = ?", $web_id);
+
+		if(empty($web['php_cli_binary'])) {
+			$php_cli_binary = "/usr/bin/php";
+		} else {
+			$php_cli_binary = $web['php_cli_binary'];
+		}
+
+		if(empty($web['domain'])) {
+			$domain = $app->tform->wordbook["domain_not_selected_placeholder_txt"];
+		} else {
+			$domain = $web['domain'];
+		}
+
+
+		$domain_owner = $app->db->queryOneRecord("SELECT limit_cron_type FROM sys_group, client WHERE sys_group.client_id = client.client_id and sys_group.groupid = ?", $web["sys_groupid"]);
+
+		//* True if the site is assigned to a client
+		if(isset($domain_owner["limit_cron_type"])) {
+			if($domain_owner["limit_cron_type"] == 'full') {
+				$cron_type = 'full';
+			} else {
+				$cron_type = 'chrooted';
+			}
+		} else {
+			//* True if the site is assigned to the admin
+			$cron_type = 'full';
+		}
+
+		if($cron_type != 'chrooted') {
+			$web_docroot_client = $web['document_root'];
+		}
+
+		$web_docroot_client .= '/web';
+
+		$json = json_encode(array(
+			'php_cli_binary' => $php_cli_binary,
+			'docroot_client' => $web_docroot_client,
+			//'cron_type' => $cron_type,
+			'domain' => $domain
+		));
+	}
+
+
+}
 
 header('Content-type: application/json');
 echo $json;

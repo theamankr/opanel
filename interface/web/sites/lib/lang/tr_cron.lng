@@ -23,4 +23,4 @@ $wb['command_hint_txt'] = 'Örnek: /var/www/clients/musteriX/webY/betigim.sh ya 
 $wb['log_output_txt'] = 'Günlük çıktısı';
 $wb['limit_cron_url_txt'] = 'Yalnız İnternet adresli zamanlanmış görev kullanılabilir. Lütfen zamanlanmış görev komutu olarak https:// ile başlayan bir İnternet adresi yazın.';
 $wb['command_error_empty'] = 'Komut boş olamaz.';
-?>
+$wb['domain_not_selected_placeholder_txt'] = 'No domain selected';

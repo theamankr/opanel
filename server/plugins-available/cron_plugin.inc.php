@@ -93,7 +93,10 @@ class cron_plugin {
 		}
 
 		//* get data from web
-		$parent_domain = $app->db->queryOneRecord("SELECT `domain_id`, `system_user`, `system_group`, `document_root`, `hd_quota` FROM `web_domain` WHERE `domain_id` = ?", $data["new"]["parent_domain_id"]);
+		$parent_domain = $app->db->queryOneRecord("SELECT `domain_id`, `system_user`, `system_group`, `domain`, `document_root`, `hd_quota`, `php_cli_binary`
+			FROM `web_domain`
+				LEFT JOIN server_php ON web_domain.server_php_id = server_php.server_php_id
+			WHERE `domain_id` = ?", $data["new"]["parent_domain_id"]);
 		if(!$parent_domain["domain_id"]) {
 			$app->log("Parent domain not found", LOGLEVEL_WARN);
 			return 0;
@@ -171,6 +174,7 @@ class cron_plugin {
 
 
 		$this->parent_domain = $parent_domain;
+
 		$this->_write_crontab();
 
 		$this->action = '';
@@ -207,6 +211,7 @@ class cron_plugin {
 		$app->uses("getconf");
 
 		$cron_config = $app->getconf->get_server_config($conf["server_id"], 'cron');
+		$web_config = $app->getconf->get_server_config($conf["server_id"], 'web');
 
 		//* try to find customer's mail address
 
@@ -220,7 +225,10 @@ class cron_plugin {
 		$chr_cmd_count = 0;
 
 		//* read all active cron jobs from database and write them to file
-		$cron_jobs = $app->db->queryAllRecords("SELECT c.`run_min`, c.`run_hour`, c.`run_mday`, c.`run_month`, c.`run_wday`, c.`command`, c.`type`, c.`log`, `web_domain`.`domain` as `domain` FROM `cron` as c INNER JOIN `web_domain` ON `web_domain`.`domain_id` = c.`parent_domain_id` WHERE c.`parent_domain_id` = ? AND c.`active` = 'y'", $this->parent_domain["domain_id"]);
+		$cron_jobs = $app->db->queryAllRecords("SELECT c.`id`, c.`run_min`, c.`run_hour`, c.`run_mday`, c.`run_month`, c.`run_wday`, c.`command`, c.`type`, c.`log`, `web_domain`.`domain` as `domain`
+			FROM `cron` as c
+				INNER JOIN `web_domain` ON `web_domain`.`domain_id` = c.`parent_domain_id`
+			WHERE c.`parent_domain_id` = ? AND c.`active` = 'y'", $this->parent_domain["domain_id"]);
 		if($cron_jobs && count($cron_jobs) > 0) {
 			foreach($cron_jobs as $job) {
 				if($job['run_month'] == '@reboot') {
@@ -229,6 +237,7 @@ class cron_plugin {
 					$cron_line = str_replace(" ", "", $job['run_min']) . "\t" . str_replace(" ", "", $job['run_hour']) . "\t" . str_replace(" ", "", $job['run_mday']) . "\t" . str_replace(" ", "", $job['run_month']) . "\t" . str_replace(" ", "", $job['run_wday']);
 				}
 
+				$web_domain = $this->parent_domain['domain'];
 				$log_target = "";
 				$log_wget_target = '/dev/null';
 				$log_root = '';
@@ -240,8 +249,16 @@ class cron_plugin {
 					$log_wget_target = $log_root . '/cron_wget.log';
 				}
 
+
+
 				$cron_line .= "\t{$this->parent_domain['system_user']}"; //* running as user
 				if($job['type'] == 'url') {
+					$trans = array(
+							'{DOMAIN}' => $web_domain
+					);
+
+					$job['command'] = strtr($job['command'], $trans);
+
 					$cron_line .= "\t{$cron_config['wget']} --no-check-certificate --user-agent='Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0' -q -t 1 -T 7200 -O " . $log_wget_target . " " . escapeshellarg($job['command']) . " " . $log_target;
 				} else {
 					if(strpos($job['command'], "\n") !== false || strpos($job['command'], "\r") !== false || strpos($job['command'], chr(0)) !== false) {
@@ -249,18 +266,43 @@ class cron_plugin {
 						continue;
 					}
 
-					$web_root = '';
+					$web_docroot_client = '';
+
+					// web folder is hardcoded to /web:
+					$web_folder = '/web';
+
 					if($job['type'] == 'chrooted') {
 						if(substr($job['command'], 0, strlen($this->parent_domain['document_root'])) == $this->parent_domain['document_root']) {
 							//* delete the unneeded path part
 							$job['command'] = substr($job['command'], strlen($this->parent_domain['document_root']));
 						}
 					} else {
-						$web_root = $this->parent_domain['document_root'];
+						$web_docroot_client = $this->parent_domain['document_root'];
 					}
 
-					$web_root .= '/web';
-					$job['command'] = str_replace('[web_root]', $web_root, $job['command']);
+					if(empty($this->parent_domain['php_cli_binary'])) {
+						// PHP cli binary not set or default was selected, fallback to "/usr/bin/php"
+						$web_php_cli = '/usr/bin/php';
+						$app->log("PHP CLI binary not set for the website\'s selected PHP version or Default was selected. Fall back to \"/usr/bin/php\" for cronjob id " . $job['id'], LOGLEVEL_DEBUG);
+						if($job['type'] == 'chrooted') {
+							if(!file_exists($this->parent_domain['document_root'] . $web_php_cli)) {
+								$app->log("The PHP cli binary " . $web_php_cli . " is not available in the jail of the web " . $web_domain . " / cronjob_id: " . $job['id']  . ". Check your Jailkit setup!", LOGLEVEL_DEBUG);
+							}
+						}
+					} else {
+						$web_php_cli = $this->parent_domain['php_cli_binary'];
+					}
+
+					$web_docroot_client .= $web_folder;
+
+					$trans = array(
+						'[web_root]' => $web_docroot_client,
+						'{DOCROOT_CLIENT}' => $web_docroot_client,
+						'{DOMAIN}' => $web_domain,
+						'{SITE_PHP}' => $web_php_cli
+					);
+
+					$job['command'] = strtr($job['command'], $trans);
 
 					$cron_line .= "\t";
 					//if($job['type'] != 'chrooted' && substr($job['command'], 0, 1) != "/") $cron_line .= $this->parent_domain['document_root'].'/';
