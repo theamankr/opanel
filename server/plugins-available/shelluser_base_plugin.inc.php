@@ -279,6 +279,8 @@ class shelluser_base_plugin {
 						}
 					}
 					$app->system->usermod($data['old']['username'], 0, $app->system->getgid($data['new']['pgroup']), $homedir, $data['new']['shell'], $data['new']['password'], $data['new']['username']);
+					$app->system->usermod($data['old']['puser'], 0, $app->system->getgid($data['new']['pgroup']), $data['new']['dir'], $data['new']['shell'], $data['new']['password'], $data['new']['puser']);
+
 					$app->log("Updated shelluser: ".$data['old']['username'], LOGLEVEL_DEBUG);
 
 					// call the ssh-rsa update function
