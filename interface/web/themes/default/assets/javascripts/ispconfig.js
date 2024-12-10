@@ -825,6 +825,11 @@ $(document).ready(function() {
 		temp.remove();
 	} );
 
+	//Prevent fireing event "click" to parent .copy-to-clipboard element #6726
+	$(document).on('click', '.copy-to-clipboard > a', function() {
+		return false;
+	} );
+
 	//display copy-to-clipboard icon
 	let lastCopyToClipboardIcon;
 	$(document).on("mouseenter", '.copy-to-clipboard', function() {
