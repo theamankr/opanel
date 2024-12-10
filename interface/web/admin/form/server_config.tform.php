@@ -856,7 +856,7 @@ $form["tabs"]['web'] = array(
 			'datatype' => 'VARCHAR',
 			'formtype' => 'SELECT',
 			'default' => 'apache',
-			'value' => array('apache' => 'Apache', 'nginx' => 'Nginx')
+			'value' => array('apache' => 'Apache', 'nginx' => 'Nginx', 'apachenginx' => 'Apache with Nginx as reverse proxy')
 		),
 		'website_basedir' => array(
 			'datatype' => 'VARCHAR',

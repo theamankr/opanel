@@ -123,6 +123,7 @@ class web_module {
 
 		// Register service
 		$app->services->registerService('httpd', 'web_module', 'restartHttpd');
+		$app->services->registerService('nginx', 'web_module', 'restartNginx');
 		$app->services->registerService('php-fpm', 'web_module', 'restartPHP_FPM');
 
 	}
@@ -259,6 +260,53 @@ class web_module {
 
 		// nginx: do a syntax check because on some distributions, the init script always returns 0 - even if the syntax is not ok (how stupid is that?)
 		//if($web_config['server_type'] == 'nginx' && $retval['retval'] == 0){
+			//exec('nginx -t 2>&1', $retval['output'], $retval['retval']);
+		//}
+		return $retval;
+	}
+
+	function restartNginx($action = 'restart') {
+		global $app, $conf;
+
+		// load the server configuration options
+		$app->uses('getconf,system');
+
+		$daemon = 'nginx';
+
+		$retval = array('output' => '', 'retval' => 0);
+		if($action == 'restart') {
+			$cmd = $app->system->getinitcommand($daemon, 'restart');
+		} elseif($action == 'force-reload') {
+			$cmd = $app->system->getinitcommand($daemon, 'force-reload');
+		} else {
+			$cmd = $app->system->getinitcommand($daemon, 'reload');
+		}
+
+		$app->log("Checking nginx configuration...", LOGLEVEL_DEBUG);
+		exec('nginx -t 2>&1', $retval['output'], $retval['retval']);
+		if($retval['retval'] == 0){
+			$app->log("nginx configuration ok!", LOGLEVEL_DEBUG);
+		} else {
+			$app->log("nginx config test failed!", LOGLEVEL_DEBUG);
+			return $retval;
+		}
+		
+		$app->log("Restarting nginx: $cmd", LOGLEVEL_DEBUG);
+		
+		if($cmd != '') {
+			exec($cmd.' 2>&1', $retval['output'], $retval['retval']);
+		} else {
+			$app->log('We got no init command, restart or reload of service aborted.',LOGLEVEL_WARN);
+		}
+
+		// if restart failed despite successful syntax check => try again
+		if($retval['retval'] > 0){
+			sleep(2);
+			exec($cmd.' 2>&1', $retval['output'], $retval['retval']);
+		}
+
+		// nginx: do a syntax check because on some distributions, the init script always returns 0 - even if the syntax is not ok (how stupid is that?)
+		//if($retval['retval'] == 0){
 			//exec('nginx -t 2>&1', $retval['output'], $retval['retval']);
 		//}
 		return $retval;

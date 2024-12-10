@@ -409,9 +409,17 @@
                 jQuery('#php option[value="cgi"]').hide();
                 jQuery('#php option[value="mod"]').hide();
                 jQuery('#php option[value="suphp"]').hide();
-            } else {
+            } else if(data.servertype == "apache") {
 				serverType = 'apache';
 				jQuery('.nginx').hide();
+                jQuery('.apache').show();
+                jQuery('#php option[value="fast-cgi"]').show();
+                jQuery('#php option[value="cgi"]').show();
+                jQuery('#php option[value="mod"]').show();
+                jQuery('#php option[value="suphp"]').show();
+            } else if(data.servertype == "apachenginx") {
+				serverType = 'apachenginx';
+				jQuery('.nginx').show();
                 jQuery('.apache').show();
                 jQuery('#php option[value="fast-cgi"]').show();
                 jQuery('#php option[value="cgi"]').show();

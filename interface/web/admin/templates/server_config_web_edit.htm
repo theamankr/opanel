@@ -436,7 +436,7 @@
             <button class="btn btn-default formbutton-default" type="button" value="{tmpl_var name='btn_cancel_txt'}" data-load-content="admin/server_config_list.php">{tmpl_var name='btn_cancel_txt'}</button>
         </div></div>
 <script language="JavaScript" type="text/javascript">
-    var serverType = jQuery('#server_type').val();
+    var serverType = jQuery('#server_type :selected').text();
     jQuery('#server_type').replaceWith('<p>'+serverType+'</p><input type="hidden" name="server_type" value="'+serverType+'">');
     adjustForm();
     jQuery('#server_type').change(function(){
@@ -448,8 +448,11 @@
         if(serverType == "nginx"){
             jQuery('.nginx').show();
             jQuery('.apache').hide();
-        } else {
+        } else if(serverType == "apache"){
             jQuery('.nginx').hide();
+            jQuery('.apache').show();
+        } else if(serverType == "apachenginx"){
+            jQuery('.nginx').show();
             jQuery('.apache').show();
         }
     }

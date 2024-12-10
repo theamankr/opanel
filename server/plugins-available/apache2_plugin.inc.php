@@ -1526,7 +1526,7 @@ class apache2_plugin {
 			$tpl->setVar('rewrite_enabled', 0);
 		}
 
-		if($data['new']['ssl'] == 'n') {
+		if($data['new']['ssl'] == 'n' || $this->nginx_reverseproxy_enable()) {
 			$tpl->setVar('rewrite_to_https', 'n');
 		}
 
@@ -1793,7 +1793,8 @@ class apache2_plugin {
 			unset($newip);
 		}
 
-		$tmp_vhost_arr = array('ip_address' => $data['new']['ip_address'], 'ssl_enabled' => 0, 'port' => 80);
+		$tmp_vhost_arr = array('ip_address' => $data['new']['ip_address'], 'ssl_enabled' => 0, 'port' => $this->get_apache_port('http'));
+		if($this->nginx_reverseproxy_enable()) $tmp_vhost_arr = $tmp_vhost_arr + array('use_proxy_protocol' => 'y');
 		if(count($rewrite_rules) > 0)  $tmp_vhost_arr = $tmp_vhost_arr + array('redirects' => $rewrite_rules);
 		if(count($alias_seo_redirects) > 0) $tmp_vhost_arr = $tmp_vhost_arr + array('alias_seo_redirects' => $alias_seo_redirects);
 		$vhosts[] = $tmp_vhost_arr;
@@ -1808,8 +1809,8 @@ class apache2_plugin {
 		unset($tmp_vhost_arr);
 
 		//* Add vhost for ipv4 IP with SSL
-		if($data['new']['ssl_domain'] != '' && $data['new']['ssl'] == 'y' && @is_file($crt_file) && @is_file($key_file) && (@filesize($crt_file)>0)  && (@filesize($key_file)>0)) {
-			$tmp_vhost_arr = array('ip_address' => $data['new']['ip_address'], 'ssl_enabled' => 1, 'port' => '443');
+		if(!$this->nginx_reverseproxy_enable() && $data['new']['ssl_domain'] != '' && $data['new']['ssl'] == 'y' && @is_file($crt_file) && @is_file($key_file) && (@filesize($crt_file)>0)  && (@filesize($key_file)>0)) {
+			$tmp_vhost_arr = array('ip_address' => $data['new']['ip_address'], 'ssl_enabled' => 1, 'port' => $this->get_apache_port('https'));
 			if(count($rewrite_rules) > 0)  $tmp_vhost_arr = $tmp_vhost_arr + array('redirects' => $rewrite_rules);
 			$ipv4_ssl_alias_seo_redirects = $alias_seo_redirects;
 			if(is_array($ipv4_ssl_alias_seo_redirects) && !empty($ipv4_ssl_alias_seo_redirects)){
@@ -1860,8 +1861,8 @@ class apache2_plugin {
 			unset($tmp_vhost_arr);
 
 			//* Add vhost for ipv6 IP with SSL
-			if($data['new']['ssl_domain'] != '' && $data['new']['ssl'] == 'y' && @is_file($crt_file) && @is_file($key_file) && (@filesize($crt_file)>0)  && (@filesize($key_file)>0)) {
-				$tmp_vhost_arr = array('ip_address' => '['.$data['new']['ipv6_address'].']', 'ssl_enabled' => 1, 'port' => '443');
+			if(!$this->nginx_reverseproxy_enable() && $data['new']['ssl_domain'] != '' && $data['new']['ssl'] == 'y' && @is_file($crt_file) && @is_file($key_file) && (@filesize($crt_file)>0)  && (@filesize($key_file)>0)) {
+				$tmp_vhost_arr = array('ip_address' => '['.$data['new']['ipv6_address'].']', 'ssl_enabled' => 1, 'port' => $this->get_apache_port('https'));
 				if(count($rewrite_rules) > 0)  $tmp_vhost_arr = $tmp_vhost_arr + array('redirects' => $rewrite_rules);
 				$ipv6_ssl_alias_seo_redirects = $alias_seo_redirects;
 				if(is_array($ipv6_ssl_alias_seo_redirects) && !empty($ipv6_ssl_alias_seo_redirects)){
@@ -2006,7 +2007,7 @@ class apache2_plugin {
 
 		if($web_config['check_apache_config'] == 'y') {
 			//* Test if apache starts with the new configuration file
-			$apache_online_status_before_restart = $this->_checkTcp('localhost', 80);
+			$apache_online_status_before_restart = $this->_checkTcp('localhost', $this->get_apache_port('http'));
 			$app->log('Apache status is: '.($apache_online_status_before_restart === true? 'running' : 'down'), LOGLEVEL_DEBUG);
 
 			$retval = $app->services->restartService('httpd', 'restart'); // $retval['retval'] is 0 on success and > 0 on failure
@@ -2016,7 +2017,7 @@ class apache2_plugin {
 			$apache_online_status_after_restart = false;
 			sleep(2);
 			for($i = 0; $i < 5; $i++) {
-				$apache_online_status_after_restart = $this->_checkTcp('localhost', 80);
+				$apache_online_status_after_restart = $this->_checkTcp('localhost', $this->get_apache_port('http'));
 				if($apache_online_status_after_restart) break;
 				sleep(1);
 			}
@@ -3669,6 +3670,37 @@ class apache2_plugin {
 			$seo_redirects[$prefix.'seo_redirect_operator'] = '!';
 		}
 		return $seo_redirects;
+	}
+
+	private function nginx_reverseproxy_enable() {
+		//* Check if the Nginx reverseproxy is enabled
+		if(@is_link('/usr/local/ispconfig/server/plugins-enabled/nginx_reverseproxy_plugin.inc.php')) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private function get_apache_port($protocol = 'http')  {
+		if (!$this->nginx_reverseproxy_enable()) {
+			switch ($protocol) {
+				case "http":
+				  	return 80;
+				  break;
+				case "https":
+					return 443;
+				  break;
+			  }
+		} else {
+			switch ($protocol) {
+				case "http":
+				  	return 6080;
+				  break;
+				case "https":
+					return 6443;
+				  break;
+			  }
+		}
 	}
 
 	function _setup_jailkit_chroot()

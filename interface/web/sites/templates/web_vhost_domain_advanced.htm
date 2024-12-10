@@ -204,8 +204,11 @@
           if(data.servertype == "nginx"){
               jQuery('.nginx').show();
               jQuery('.apache').hide();
-          } else {
+          } else if(data.servertype == "apache"){
               jQuery('.nginx').hide();
+              jQuery('.apache').show();
+          } else if(data.servertype == "apachenginx"){
+              jQuery('.nginx').show();
               jQuery('.apache').show();
           }
       });

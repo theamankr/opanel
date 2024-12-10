@@ -431,7 +431,7 @@ class page_action extends tform_actions {
 				if($php_directive_snippets_txt == '') $php_directive_snippets_txt = '------';
 				$app->tpl->setVar("php_directive_snippets_txt", $php_directive_snippets_txt);
 
-				if($server_type == 'apache'){
+				if($server_type == 'apache' || $server_type == 'apachenginx'){
 					$apache_directive_snippets_txt = '';
 					$apache_directive_snippets = $app->db->queryAllRecords("SELECT * FROM directive_snippets WHERE type = 'apache' AND active = 'y' ORDER BY name");
 					if(is_array($apache_directive_snippets) && !empty($apache_directive_snippets)){
@@ -445,7 +445,7 @@ class page_action extends tform_actions {
 					$app->tpl->setVar("apache_directive_snippets_txt", $apache_directive_snippets_txt);
 				}
 
-				if($server_type == 'nginx'){
+				if($server_type == 'nginx' || $server_type == 'apachenginx'){
 					$nginx_directive_snippets_txt = '';
 					$nginx_directive_snippets = $app->db->queryAllRecords("SELECT * FROM directive_snippets WHERE type = 'nginx' AND active = 'y' ORDER BY name");
 					if(is_array($nginx_directive_snippets) && !empty($nginx_directive_snippets)){
@@ -605,7 +605,7 @@ class page_action extends tform_actions {
 			if($php_directive_snippets_txt == '') $php_directive_snippets_txt = '------';
 			$app->tpl->setVar("php_directive_snippets_txt", $php_directive_snippets_txt);
 
-			if($server_type == 'apache'){
+			if($server_type == 'apache' || $server_type == 'apachenginx'){
 				$apache_directive_snippets_txt = '';
 				$apache_directive_snippets = $app->db->queryAllRecords("SELECT * FROM directive_snippets WHERE type = 'apache' AND active = 'y' ORDER BY name");
 				if(is_array($apache_directive_snippets) && !empty($apache_directive_snippets)){
@@ -619,7 +619,7 @@ class page_action extends tform_actions {
 				$app->tpl->setVar("apache_directive_snippets_txt", $apache_directive_snippets_txt);
 			}
 
-			if($server_type == 'nginx'){
+			if($server_type == 'nginx' || $server_type == 'apachenginx'){
 				$nginx_directive_snippets_txt = '';
 				$nginx_directive_snippets = $app->db->queryAllRecords("SELECT * FROM directive_snippets WHERE type = 'nginx' AND active = 'y' ORDER BY name");
 				if(is_array($nginx_directive_snippets) && !empty($nginx_directive_snippets)){
@@ -1147,7 +1147,7 @@ class page_action extends tform_actions {
 		// Check rewrite rules
 		$server_type = $web_config['server_type'];
 
-		if($server_type == 'nginx' && isset($this->dataRecord['rewrite_rules']) && trim($this->dataRecord['rewrite_rules']) != '') {
+		if(($server_type == 'nginx' || $server_type == 'apachenginx') && isset($this->dataRecord['rewrite_rules']) && trim($this->dataRecord['rewrite_rules']) != '') {
 			$rewrite_rules = trim($this->dataRecord['rewrite_rules']);
 			$rewrites_are_valid = true;
 			// use this counter to make sure all curly brackets are properly closed
