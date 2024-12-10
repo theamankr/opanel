@@ -200,6 +200,7 @@ class remoting_client extends remoting {
 		$old_rec = $app->remoting_lib->getDataRecord($client_id);
 
 		//* merge old record with params, so only new values have to be set in $params
+		$params_req = $params;
 		$params = $app->functions->array_merge($old_rec,$params);
 
 		if(!isset($params['parent_client_id']) || $params['parent_client_id'] == 0) $params['parent_client_id'] = $reseller_id;
@@ -231,7 +232,7 @@ class remoting_client extends remoting {
 			}
 			unset($tpls);
 		}
-		if(isset($params['template_additional'])) {
+		if(isset($params_req['template_additional'])) {
 			$app->uses('client_templates');
 			$templates = explode('/', $params['template_additional']);
 			$params['template_additional'] = '';
