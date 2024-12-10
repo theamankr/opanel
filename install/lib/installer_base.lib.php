@@ -3954,7 +3954,8 @@ class installer_base extends stdClass {
 
 		$install_dir = $conf['ispconfig_install_dir'];
 
-		//* Root Crontab
+		// Cleanup legacy crontab in /var/spool/cron/crontabs/
+		// This cleanup code should remain untill after the 3.4. release.
 		exec('crontab -u root -l > crontab.txt 2>/dev/null');
 		$existing_root_cron_jobs = file('crontab.txt');
 
@@ -3962,53 +3963,56 @@ class installer_base extends stdClass {
 		foreach($existing_root_cron_jobs as $key => $val) {
 			if(stristr($val, $install_dir)) unset($existing_root_cron_jobs[$key]);
 		}
-
-		$root_cron_jobs = array(
-			"* * * * * ".$install_dir."/server/server.sh 2>&1 | while read line; do echo `/bin/date` \"\$line\" >> ".$conf['ispconfig_log_dir']."/cron.log; done",
-			"* * * * * ".$install_dir."/server/cron.sh 2>&1 | while read line; do echo `/bin/date` \"\$line\" >> ".$conf['ispconfig_log_dir']."/cron.log; done"
-		);
-
-		if ($conf['nginx']['installed'] == true) {
-			$root_cron_jobs[] = "0 0 * * * ".$install_dir."/server/scripts/create_daily_nginx_access_logs.sh &> /dev/null";
-		}
-
-		foreach($root_cron_jobs as $cron_job) {
-			if(!in_array($cron_job."\n", $existing_root_cron_jobs)) {
-				$existing_root_cron_jobs[] = $cron_job."\n";
-			}
-		}
 		file_put_contents('crontab.txt', $existing_root_cron_jobs);
 		exec('crontab -u root crontab.txt &> /dev/null');
 		unlink('crontab.txt');
+		// END cleanup
+
+		$root_cron_jobs = array(
+			"# THIS FILE IS MANAGED BY ISPCONFIG, changed will be overridden on future updates.",
+			"# m h  dom mon dow  user  command",
+			"",
+			"* * * * * root ".$install_dir."/server/server.sh 2>&1 | while read line; do echo `/bin/date` \"\$line\" >> ".$conf['ispconfig_log_dir']."/cron.log; done",
+			"* * * * * root ".$install_dir."/server/cron.sh 2>&1 | while read line; do echo `/bin/date` \"\$line\" >> ".$conf['ispconfig_log_dir']."/cron.log; done",
+			"",
+		);
+
+		if ($conf['nginx']['installed'] == true) {
+			$root_cron_jobs[] = "0 0 * * * root ".$install_dir."/server/scripts/create_daily_nginx_access_logs.sh &> /dev/null";
+		}
+
+		file_put_contents($conf['cron']['crontab_dir'] . '/ispconfig', implode(PHP_EOL, $root_cron_jobs));
 
 		//* Getmail crontab
 		if(is_user('getmail')) {
 			$cf = $conf['getmail'];
+
+			// Cleanup legacy crontab in /var/spool/cron/crontabs/
+			// This cleanup code should remain untill after the 3.4. release.
 			exec('crontab -u getmail -l > crontab.txt 2>/dev/null');
 			$existing_cron_jobs = file('crontab.txt');
-
-			$cron_jobs = array(
-				'*/5 * * * * /usr/local/bin/run-getmail.sh > /dev/null 2>> /dev/null'
-			);
-
 			// remove existing ispconfig cronjobs, in case the syntax has changed
 			foreach($existing_cron_jobs as $key => $val) {
 				if(stristr($val, 'getmail')) unset($existing_cron_jobs[$key]);
 			}
-
-			foreach($cron_jobs as $cron_job) {
-				if(!in_array($cron_job."\n", $existing_cron_jobs)) {
-					$existing_cron_jobs[] = $cron_job."\n";
-				}
-			}
 			file_put_contents('crontab.txt', $existing_cron_jobs);
 			exec('crontab -u getmail crontab.txt &> /dev/null');
 			unlink('crontab.txt');
+			// END cleanup
+
+			$cron_jobs = array(
+				"# THIS FILE IS MANAGED BY ISPCONFIG, changed will be overridden on future updates.",
+				"# m h  dom mon dow  user  command",
+				"",
+				'*/5 * * * * getmail /usr/local/bin/run-getmail.sh > /dev/null 2>> /dev/null',
+				"",
+			);
+
+			file_put_contents($conf['cron']['crontab_dir'] . '/ispconfig-getmail', implode(PHP_EOL, $cron_jobs));
 		}
 
 		touch($conf['ispconfig_log_dir'].'/cron.log');
 		chmod($conf['ispconfig_log_dir'].'/cron.log', 0660);
-
 	}
 
 	public function create_mount_script(){
