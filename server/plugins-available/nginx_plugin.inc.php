@@ -1418,7 +1418,7 @@ class nginx_plugin {
 		$rewrite_rules = array();
 		$local_rewrite_rules = array();
 		if($data['new']['redirect_type'] != '' && $data['new']['redirect_path'] != '') {
-			if(substr($data['new']['redirect_path'], -1) != '/') $data['new']['redirect_path'] .= '/';
+			//if(substr($data['new']['redirect_path'], -1) != '/') $data['new']['redirect_path'] .= '/';
 			if(substr($data['new']['redirect_path'], 0, 8) == '[scheme]'){
 				if($data['new']['redirect_type'] != 'proxy'){
 					$data['new']['redirect_path'] = '$scheme'.substr($data['new']['redirect_path'], 8);
@@ -1580,7 +1580,7 @@ class nginx_plugin {
 							$vhost_data['use_proxy'] = 'y';
 							$rewrite_subdir = $tmp_redirect_path_parts['path'];
 							if(substr($rewrite_subdir, 0, 1) == '/') $rewrite_subdir = substr($rewrite_subdir, 1);
-							if(substr($rewrite_subdir, -1) != '/') $rewrite_subdir .= '/';
+							//if(substr($rewrite_subdir, -1) != '/') $rewrite_subdir .= '/';
 							if($rewrite_subdir == '/') $rewrite_subdir = '';
 						}
 					}
