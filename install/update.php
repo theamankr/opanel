@@ -320,15 +320,23 @@ checkDbHealth();
 /*
  * Check command line mysql login
  */
-if( !empty($conf["mysql"]["admin_password"]) ) {
-	$cmd = "mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." --force -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." -p".escapeshellarg($conf['mysql']['admin_password'])." -P ".escapeshellarg($conf['mysql']['port'])." -D ".escapeshellarg($conf['mysql']['database'])." -e ". escapeshellarg('SHOW DATABASES');
-} else {
-	$cmd = "mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." --force -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." -P ".escapeshellarg($conf['mysql']['port'])." -D ".escapeshellarg($conf['mysql']['database'])." -e ". escapeshellarg('SHOW DATABASES');
+$command = "mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])
+  ." --host=".escapeshellarg($conf['mysql']['host'])
+  ." --user=".escapeshellarg($conf['mysql']['admin_user']);
+
+// Localhost defaults to use a socket
+if ($conf['mysql']['host'] != 'localhost' || $conf['mysql']['port'] != '3306') {
+  $command .= " --port=".escapeshellarg($conf['mysql']['port']);
 }
-$retval = 0;
-$retout = array();
-exec($cmd, $retout, $retval);
-if($retval != 0) {
+if (!empty($conf['mysql']['admin_password'])) {
+  $command .= " --password=".escapeshellarg($conf['mysql']['admin_password']);
+}
+
+$command .= " --database=".escapeshellarg($conf['mysql']['database']);
+$command .= " --execute='SHOW DATABASES'";
+
+$retval = caselog($command . " &> /dev/null", __FILE__, __LINE__, 'Tested sql cli connection', 'sql cli connection failed');
+if($retval == false) {
 	die("Unable to call mysql command line with credentials from mysql_clientdb.conf\n");
 }
 

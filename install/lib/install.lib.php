@@ -453,9 +453,11 @@ function caselog($command, $file = '', $line = '', $success = '', $failure = '')
 	if($ret_val != 0){
 		if($failure == '') $failure = 'could not '.$command;
 		ilog($pre.'WARNING: '.$failure);
+		return false;
 	} else {
 		if($success == '') $success = $command;
 		ilog($pre.$success);
+		return true;
 	}
 }
 

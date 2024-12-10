@@ -39,15 +39,11 @@ class installer_patch_update {
 
 //* DB dump function
 function prepareDBDump() {
-	global $conf;
+	global $inst, $conf;
 
 	//** load the pre update sql script do perform modifications on the database before the database is dumped
 	if(is_file(ISPC_INSTALL_ROOT."/install/sql/pre_update.sql")) {
-		if($conf['mysql']['admin_password'] == '') {
-			caselog("mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." ".escapeshellarg($conf['mysql']['database'])." < '".ISPC_INSTALL_ROOT."/install/sql/pre_update.sql' &> /dev/null", __FILE__, __LINE__, 'read in pre_update.sql', 'could not read in pre_update.sql');
-		} else {
-			caselog("mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." -p".escapeshellarg($conf['mysql']['admin_password'])." ".escapeshellarg($conf['mysql']['database'])." < '".ISPC_INSTALL_ROOT."/install/sql/pre_update.sql' &> /dev/null", __FILE__, __LINE__, 'read in pre_update.sql', 'could not read in pre_update.sql');
-		}
+		$inst->load_sql_via_cli($conf['mysql']['database'], ISPC_INSTALL_ROOT.'/install/sql/pre_update.sql',  __FILE__, __LINE__, 'read in pre_update.sql', 'could not read in pre_update.sql');
 	}
 
 	//** export the current database data
@@ -103,7 +99,22 @@ function checkDbHealth() {
 	$notok = array();
 
 	echo "Checking ISPConfig database .. ";
-	exec("mysqlcheck -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." -p".escapeshellarg($conf['mysql']['admin_password'])." -P ".escapeshellarg($conf['mysql']['port'])." --auto-repair ".escapeshellarg($conf["mysql"]["database"]), $result);
+
+	$command = "mysqlcheck --auto-repair"
+		." --host=".escapeshellarg($conf['mysql']['host'])
+		." --user=".escapeshellarg($conf['mysql']['admin_user']);
+
+	// Localhost defaults to use a socket
+	if ($conf['mysql']['host'] != 'localhost' || $conf['mysql']['port'] != '3306') {
+		$command .= " --port=".escapeshellarg($conf['mysql']['port']);
+	}
+	if (!empty($conf['mysql']['admin_password'])) {
+		$command .= " --password=".escapeshellarg($conf['mysql']['admin_password']);
+	}
+	$command .= " ".escapeshellarg($conf["mysql"]["database"]);
+
+	exec($command, $result);
+
 	for( $i=0; $i<sizeof($result);$i++) {
 		if ( substr($result[$i], -2) != "OK" ) {
 			$notok[] = $result[$i];
@@ -209,20 +220,13 @@ function updateDbAndIni() {
 				}
 
 				//* Load patch file into database
-				if( !empty($conf["mysql"]["admin_password"]) ) {
-					$cmd = "mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." --force -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." -p".escapeshellarg($conf['mysql']['admin_password'])." -P ".escapeshellarg($conf['mysql']['port'])." ".escapeshellarg($conf['mysql']['database'])." < ".$sql_patch_filename;
-				} else {
-					$cmd = "mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." --force -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." -P ".escapeshellarg($conf['mysql']['port'])." ".escapeshellarg($conf['mysql']['database'])." < ".$sql_patch_filename;
-				}
-
 				if(in_array($next_db_version,explode(',',$silent_update_versions))) {
-					$cmd .= ' > /dev/null 2> /dev/null';
+					$logfile = '/dev/null';
 				} else {
-					$cmd .= ' >> /var/log/ispconfig_install.log 2>> /var/log/ispconfig_install.log';
+					$logfile = '/var/log/ispconfig_install.log';
 				}
-				system($cmd);
-
 				swriteln($inst->lng('Loading SQL patch file').': '.$sql_patch_filename);
+				$inst->load_sql_via_cli($conf['mysql']['database'], $sql_patch_filename,  __FILE__, __LINE__, "read in $sql_patch_filename", "could not read in $sql_patch_filename", $logfile);
 
 				//* Exec onAfterSQL function
 				if(isset($php_patch) && is_object($php_patch) && method_exists($php_patch, 'onAfterSQL')) {
@@ -266,11 +270,7 @@ function updateDbAndIni() {
 		}
 
 		//** load old data back into database
-		if( !empty($conf["mysql"]["admin_password"]) ) {
-			system("mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." --force -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." -p".escapeshellarg($conf['mysql']['admin_password'])." ".escapeshellarg($conf['mysql']['database'])." < existing_db.sql");
-		} else {
-			system("mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." --force -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." ".escapeshellarg($conf['mysql']['database'])." < existing_db.sql");
-		}
+		$inst->load_sql_via_cli($conf['mysql']['database'], 'existing_db.sql', __FILE__, __LINE__, 'read in existing_db.sql', 'could not read in existing_db.sql');
 
 		//** Get the database version number based on the patchfile
 		$found = true;
@@ -301,11 +301,7 @@ function updateDbAndIni() {
 			$inst->configure_powerdns();
 
 			//** load old data back into the PowerDNS database
-			if( !empty($conf["mysql"]["admin_password"]) ) {
-				system("mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." --force -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." -p".escapeshellarg($conf['mysql']['admin_password'])." ".escapeshellarg($conf['powerdns']['database'])." < existing_powerdns_db.sql");
-			} else {
-				system("mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." --force -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." ".escapeshellarg($conf['powerdns']['database'])." < existing_powerdns_db.sql");
-			}
+			$inst->load_sql_via_cli($conf['powerdns']['database'], 'existing_powerdns_db.sql', __FILE__, __LINE__, 'read in existing_powerdns_db.sql', 'could not read in existing_powerdns_db.sql');
 		}
 	}
 

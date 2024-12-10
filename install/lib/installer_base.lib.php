@@ -369,13 +369,9 @@ class installer_base extends stdClass {
 		if(count($db_tables) > 0) {
 			$this->error('Stopped: Database already contains some tables.');
 		} else {
-			if($conf['mysql']['admin_password'] == '') {
-				caselog("mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." -P ".escapeshellarg($conf['mysql']['port'])." ".escapeshellarg($conf['mysql']['database'])." < '".ISPC_INSTALL_ROOT."/install/sql/ispconfig3.sql' &> /dev/null",
-					__FILE__, __LINE__, 'read in ispconfig3.sql', 'could not read in ispconfig3.sql');
-			} else {
-				caselog("mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])." -h ".escapeshellarg($conf['mysql']['host'])." -u ".escapeshellarg($conf['mysql']['admin_user'])." -p".escapeshellarg($conf['mysql']['admin_password'])." -P ".escapeshellarg($conf['mysql']['port'])." ".escapeshellarg($conf['mysql']['database'])." < '".ISPC_INSTALL_ROOT."/install/sql/ispconfig3.sql' &> /dev/null",
-					__FILE__, __LINE__, 'read in ispconfig3.sql', 'could not read in ispconfig3.sql');
-			}
+
+			$this->load_sql_via_cli($conf['mysql']['database'], ISPC_INSTALL_ROOT."/install/sql/ispconfig3.sql", __FILE__, __LINE__, 'read in ispconfig3.sql', 'could not read in ispconfig3.sql');
+
 			$db_tables = $this->db->getTables();
 			if(count($db_tables) == 0) {
 				$this->error('Unable to load SQL-Dump into database table.');
@@ -387,6 +383,26 @@ class installer_base extends stdClass {
 
 		}
 	}
+
+	public function load_sql_via_cli($database, $filename, $file = '', $line = '', $success = '', $failure = '', $logfile = '/dev/null') {
+		global $conf;
+
+		$command = "mysql --default-character-set=".escapeshellarg($conf['mysql']['charset'])
+			." --host=".escapeshellarg($conf['mysql']['host'])
+			." --user=".escapeshellarg($conf['mysql']['admin_user']);
+
+		// Localhost defaults to use a socket
+		if ($conf['mysql']['host'] != 'localhost' || $conf['mysql']['port'] != '3306') {
+			$command .= " --port=".escapeshellarg($conf['mysql']['port']);
+		}
+		if (!empty($conf['mysql']['admin_password'])) {
+			$command .= " --password=".escapeshellarg($conf['mysql']['admin_password']);
+		}
+		$command .= " --database=".escapeshellarg($database);
+
+		caselog($command . " < '$filename' &>> $logfile", $file, $line, $success, $failure);
+	}
+
 
 	//** Create the server record in the database
 	public function add_database_server_record() {
@@ -2224,13 +2240,7 @@ class installer_base extends stdClass {
 		}
 
 		//* load the powerdns databse dump
-		if($conf['mysql']['admin_password'] == '') {
-			caselog("mysql --default-character-set=".$conf['mysql']['charset']." -h '".$conf['mysql']['host']."' -u '".$conf['mysql']['admin_user']."' --force '".$conf['powerdns']['database']."' < '".ISPC_INSTALL_ROOT."/install/sql/powerdns.sql' &> /dev/null",
-				__FILE__, __LINE__, 'read in ispconfig3.sql', 'could not read in powerdns.sql');
-		} else {
-			caselog("mysql --default-character-set=".$conf['mysql']['charset']." -h '".$conf['mysql']['host']."' -u '".$conf['mysql']['admin_user']."' -p'".$conf['mysql']['admin_password']."' --force '".$conf['powerdns']['database']."' < '".ISPC_INSTALL_ROOT."/install/sql/powerdns.sql' &> /dev/null",
-				__FILE__, __LINE__, 'read in ispconfig3.sql', 'could not read in powerdns.sql');
-		}
+		$this->load_sql_via_cli($conf['powerdns']['database'], ISPC_INSTALL_ROOT."/install/sql/powerdns.sql", __FILE__, __LINE__, 'read in powerdns.sql', 'could not read in powerdns.sql');
 
 		//* Create the powerdns config file
 		$configfile = 'pdns.local';

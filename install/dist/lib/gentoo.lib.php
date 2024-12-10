@@ -754,13 +754,7 @@ class installer extends installer_base
 		}
 
 		//* load the powerdns databse dump
-		if($conf['mysql']['admin_password'] == '') {
-			caselog("mysql --default-character-set=".$conf['mysql']['charset']." -h '".$conf['mysql']['host']."' -u '".$conf['mysql']['admin_user']."' --force '".$conf['powerdns']['database']."' < '".ISPC_INSTALL_ROOT."/install/sql/powerdns.sql' &> /dev/null",
-				__FILE__, __LINE__, 'read in ispconfig3.sql', 'could not read in powerdns.sql');
-		} else {
-			caselog("mysql --default-character-set=".$conf['mysql']['charset']." -h '".$conf['mysql']['host']."' -u '".$conf['mysql']['admin_user']."' -p'".$conf['mysql']['admin_password']."' --force '".$conf['powerdns']['database']."' < '".ISPC_INSTALL_ROOT."/install/sql/powerdns.sql' &> /dev/null",
-				__FILE__, __LINE__, 'read in ispconfig3.sql', 'could not read in powerdns.sql');
-		}
+		$this->load_sql_via_cli($conf['powerdns']['database'], ISPC_INSTALL_ROOT.'/install/sql/powerdns.sql', __FILE__, __LINE__, 'read in install/sql/powerdns.sql', 'could not read in install/sql/powerdns.sql');
 
 		//* Create the powerdns config file
 		$content = $this->get_template_file('pdns.local', true, true); //* get contents & insert db cred
