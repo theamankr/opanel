@@ -66,8 +66,20 @@
             </div>
 			<tmpl_if name="ssh_authentication" op="!=" value="password">
             <div class="form-group">
-                <label for="ssh_rsa" class="col-sm-3 control-label">{tmpl_var name='ssh_rsa_txt'}</label>
-                <div class="col-sm-9"><textarea class="form-control" name="ssh_rsa" id="ssh_rsa" rows="10" cols="30">{tmpl_var name='ssh_rsa'}</textarea></div>
+                <label for="ssh_rsa" class="col-sm-3 control-label">{tmpl_var name='ssh_rsa_txt'}
+                    <button onclick="toggleView(); return false;">Toggle View</button>
+                </label>
+                <div class="col-sm-9"><textarea class="form-control" name="ssh_rsa" id="ssh_rsa" rows="10" cols="30">{tmpl_var name='ssh_rsa'}</textarea>
+
+                    <div id="sshWidgetContainer"></div>
+
+                    <div id="addKeyContainer" class="input-group col-sm-9" >
+                        <input type="text" id="newSSHKey" placeholder="Enter new SSH key"  class="form-control">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="button" onclick="addNewKey(); return false;">Add Key</button>
+                        </span>
+                    </div>
+                </div>
             </div>
 			</tmpl_if>
             <div class="form-group">
@@ -84,3 +96,201 @@
             <button class="btn btn-default formbutton-success" type="button" value="{tmpl_var name='btn_save_txt'}" data-submit-form="pageForm" data-form-action="sites/shell_user_edit.php">{tmpl_var name='btn_save_txt'}</button>
             <button class="btn btn-default formbutton-default" type="button" value="{tmpl_var name='btn_cancel_txt'}" data-load-content="sites/shell_user_list.php">{tmpl_var name='btn_cancel_txt'}</button>
         </div></div>
+
+<script>
+    function createSSHWidget(type, comment, optionsString, index, textarea) {
+        const widget = document.createElement('div');
+        widget.classList.add('ssh-widget');
+        widget.textContent = `${type}, ${comment}`;
+        // Add a data attribute to the widget for later identification
+        widget.setAttribute('data-index', index);
+
+        // Add a options span to the widget
+        if (optionsString != '') {
+            widget.appendChild(document.createElement('br'));
+            const optionsSpan = document.createElement('span');
+            optionsSpan.textContent = `Options: ${optionsString}`;
+            widget.appendChild(optionsSpan);
+        }
+
+        // Add a delete icon to the widget
+        const deleteIcon = document.createElement('i');
+        deleteIcon.classList.add('fa', 'fa-trash', 'delete-icon');
+        deleteIcon.addEventListener('click', () => deleteRow(index));
+        widget.appendChild(deleteIcon);
+
+        // Add a copy icon to the widget
+        const copyIcon = document.createElement('i');
+        copyIcon.classList.add('fa', 'fa-copy', 'copy-icon');
+        copyIcon.addEventListener('click', () => copyToClipboard(index, textarea));
+        widget.appendChild(copyIcon);
+
+        // Add a tooltip to show the full pubkey on hover
+        const fullPubkeyTooltip = document.createElement('div');
+        fullPubkeyTooltip.classList.add('full-pubkey-tooltip');
+        fullPubkeyTooltip.textContent = textarea.value.trim().split('\n')[index];
+        widget.appendChild(fullPubkeyTooltip);
+
+        return widget;
+    }
+
+    function convertToWidget() {
+        const textarea = document.getElementById('ssh_rsa');
+        const widgetContainer = document.getElementById('sshWidgetContainer');
+        widgetContainer.innerHTML = ''; // Clear existing widgets
+
+        const publicKeys = textarea.value.trim().split('\n');
+        for (let i = 0; i < publicKeys.length; i++) {
+            const publicKeyLine = publicKeys[i].trim();
+
+            // Skip empty lines and comments
+            if (publicKeyLine === '' || publicKeyLine.startsWith('#')) {
+                continue;
+            }
+
+            // Split the line into parts
+            const parts = publicKeyLine.split(/\s+/);
+
+            // Extract options and public key
+            let options = [];
+            let publicKey = '';
+            let publicKeyIndex = 0;
+
+            for (let j = 0; j < parts.length; j++) {
+                if (parts[j].includes('=')) {
+                    options.push(parts[j]);
+                } else {
+                    publicKey = parts[j];
+                    publicKeyIndex = j;
+                    break;
+                }
+            }
+
+            // Combine the options into a string
+            const optionsString = options.join(' ');
+
+            // Extract the type and comment from the public key
+            const type = publicKey.split(/\s+/)[0];
+
+            const comment = parts.slice(publicKeyIndex + 2).join(' '); // Handle comments with spaces
+
+            // Create the widget
+            const widget = createSSHWidget(type, comment, optionsString, i, textarea);
+            widgetContainer.appendChild(widget);
+        }
+    }
+
+    function toggleView() {
+        const textarea = document.getElementById('ssh_rsa');
+        const widgetContainer = document.getElementById('sshWidgetContainer');
+        const addKeyContainer = document.getElementById('addKeyContainer');
+
+        if (textarea.style.display == "" || textarea.style.display === 'block') {
+            // Switching to widget view
+            textarea.style.display = 'none';
+            widgetContainer.style.display = 'block';
+            addKeyContainer.style.display = 'block';
+        } else {
+            // Switching to textarea view
+            textarea.style.display = 'block';
+            widgetContainer.style.display = 'none';
+            addKeyContainer.style.display = 'none';
+        }
+    }
+
+    function deleteRow(index) {
+        const textarea = document.getElementById('ssh_rsa');
+        const widgetContainer = document.getElementById('sshWidgetContainer');
+
+        // Delete the corresponding row from the textarea
+        const publicKeys = textarea.value.trim().split('\n');
+        publicKeys.splice(index, 1);
+        textarea.value = publicKeys.join('\n');
+
+        // Update the widget display
+        convertToWidget();
+    }
+
+    function addNewKey() {
+        const textarea = document.getElementById('ssh_rsa');
+        const newSSHKeyInput = document.getElementById('newSSHKey');
+
+        // Append the new key to the textarea
+        textarea.value += '\n' + newSSHKeyInput.value;
+
+        // Update the widget display
+        convertToWidget();
+
+        // Clear the input field
+        newSSHKeyInput.value = '';
+    }
+
+    function copyToClipboard(index, textarea) {
+    const fullPubkey = textarea.value.trim().split('\n')[index];
+    navigator.clipboard.writeText(fullPubkey).then(() => {
+        alert('Public key copied to clipboard!');
+    }).catch((error) => {
+        console.error('Unable to copy to clipboard', error);
+    });
+    }
+
+
+    // Call the function initially to convert the existing textarea content
+    convertToWidget();
+    toggleView();
+
+    // Attach an event listener to dynamically update the widgets when textarea content changes
+    document.getElementById('ssh_rsa').addEventListener('input', convertToWidget);
+</script>
+
+
+    <style>
+        /* Add your custom styling here */
+        .ssh-widget {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .delete-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .copy-icon {
+            position: absolute;
+            top: 5px;
+            right: 30px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .full-pubkey-tooltip {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            display: none;
+            z-index: 3;
+        }
+
+        .ssh-widget:hover .full-pubkey-tooltip {
+            display: block;
+        }
+
+        #addKeyContainer {
+            display: none;
+        }
+        #newSSHKey {
+            width: 80%;
+        }
+    </style>
