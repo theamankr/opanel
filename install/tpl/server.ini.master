@@ -140,6 +140,11 @@ vhost_proxy_protocol_enabled=n
 vhost_proxy_protocol_protocols=ipv4
 vhost_proxy_protocol_http_port=880
 vhost_proxy_protocol_https_port=8443
+le_signature_type=ECDSA
+le_delete_on_site_remove=y
+le_auto_cleanup=y
+le_revoke_before_delete=y
+le_auto_cleanup_denylist=[server_name]
 
 [dns]
 bind_user=root

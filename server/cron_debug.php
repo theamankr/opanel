@@ -55,6 +55,9 @@ if(isset($cmd_opt['cronjob']) && is_file($path.'/'.$cmd_opt['cronjob'])) {
 	die('Usage example: php cron_debug.php --cronjob=100-mailbox_stats.inc.php'."\n");
 }
 
+// increase log priority to debug - we are debugging a cronjob after all
+$conf['log_priority'] = LOGLEVEL_DEBUG;
+
 // Load and run the cronjob
 $name = substr($cronjob_file, 0, strpos($cronjob_file, '.'));
 if(preg_match('/^\d+\-(.*)$/', $name, $match)) $name = $match[1]; // strip numerical prefix from file name

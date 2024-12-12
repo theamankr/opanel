@@ -248,6 +248,28 @@
 					<label class="col-sm-3 control-label"><tmpl_var name="skip_le_check_txt"></label>
 					<div class="col-sm-9"><tmpl_var name="skip_le_check"></div>
 				</div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{tmpl_var name='le_signature_type_txt'}</label>
+                    <div class="col-sm-9"><select name="le_signature_type" id="le_signature_type" class="form-control">
+                        {tmpl_var name='le_signature_type'}
+                    </select></div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-9 col-sm-offset-3"><label class="control-label control-label-plain"><tmpl_var name="le_delete_on_site_remove">  <tmpl_var name="le_delete_on_site_remove_txt"></label></div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-9 col-sm-offset-3"><label class="control-label control-label-plain"><tmpl_var name="le_auto_cleanup"> <tmpl_var name="le_auto_cleanup_txt"></label></div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-9 col-sm-offset-3"><label class="control-label control-label-plain"><tmpl_var name="le_revoke_before_delete"> <tmpl_var name="le_revoke_before_delete_txt"></label></div>
+                </div>
+                <div class="form-group">
+                    <label for="le_auto_cleanup_denylist" class="col-sm-3 control-label">{tmpl_var name='le_auto_cleanup_denylist_txt'}</label>
+                    <div class="col-sm-9">
+                        <input type="text" name="le_auto_cleanup_denylist" id="le_auto_cleanup_denylist" value="{tmpl_var name='le_auto_cleanup_denylist'}" class="form-control" />
+                        <br>{tmpl_var name='le_auto_cleanup_denylist_note_txt'} <a href="javascript:void(0);" class="addPlaceholder" title="{tmpl_var name='server_name' escape='html'}">[server_name]</a>
+                    </div>
+                </div>
 	  <!-- End content -->
 	  </div>
 	</div>

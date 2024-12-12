@@ -49,6 +49,14 @@ if(DEVSYSTEM !== true) {
  * @author Till Brehm
  * @license bsd-3-clause
  * @link empty
+ *
+ * @property-read functions $functions
+ * @property-read getconf $getconf
+ * @property-read letsencrypt $letsencrypt
+ * @property-read modules $modules
+ * @property-read plugins $plugins
+ * @property-read services $services
+ * @property-read system $system
  **/
 class app extends stdClass {
 	/** @var array	List of modules that have been loaded. */
@@ -57,8 +65,10 @@ class app extends stdClass {
 	var $loaded_plugins = [];
 	/** @var callable	Script calling this. */
 	var $_calling_script = '';
-	/** @var resource?	Database used for ISPConfig3. */
+	/** @var db|false	Database used for ISPConfig3. */
 	public $db;
+	/** @var db|false */
+	public $dbmaster;
 
 	/**
 	 * Class constructor, which depends on the global configuration stored in $conf.
