@@ -86,8 +86,8 @@ class ini_parser{
 				}
 			}
 		}
-		if($q!=true && !empty($out))
-			return "[".$out."]\r\n".$t;
+		if($q!==true && !empty($out))
+			return "\r\n\r\n[".$out."]".$t;
 		if(!empty($out))
 			return  $t;
 		return trim($t);
