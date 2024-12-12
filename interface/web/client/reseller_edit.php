@@ -107,6 +107,14 @@ class page_action extends tform_actions {
 		$app->tpl->setVar('contact_name', $tmp['contact_name']);
 		$app->tpl->setVar('email', $tmp['email']);
 
+		$app->uses('getconf,system');
+		$web_config = $app->getconf->get_global_config('sites');
+		if($web_config['postgresql_database'] == 'y') {
+			$app->tpl->setVar('show_postgresql', true);
+		} else {
+			$app->tpl->setVar('show_postgresql', false);
+		}
+
 		parent::onShowEdit();
 	}
 
@@ -326,8 +334,8 @@ class page_action extends tform_actions {
 					$subject = str_replace('{password}', $this->dataRecord['password'], $subject);
 					break;
 				case 'gender':
-					$message = str_replace('{salutation}', $wb['gender_'.$val.'_txt'], $message);
-					$subject = str_replace('{salutation}', $wb['gender_'.$val.'_txt'], $subject);
+					$message = str_replace('{salutation}', $app->lng('gender_'.$val.'_txt'), $message);
+					$subject = str_replace('{salutation}', $app->lng('gender_'.$val.'_txt'), $subject);
 					break;
 				default:
 					$message = str_replace('{'.$key.'}', $val, $message);

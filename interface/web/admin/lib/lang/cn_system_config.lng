@@ -109,4 +109,4 @@ $wb['dns_show_zoneexport_txt'] = '显示区域导出。';
 $wb['le_caa_autocreate_options_txt'] = '在颁发 LE 时启用 CAA 记录的自动创建';
 $wb['dns_external_slave_server_txt'] = 'External DNS servers (comma separated)';
 $wb['mailbox_show_last_access_txt'] = 'Show last access time for mail accounts';
-?>
+$wb['postgresql_database_txt'] = 'PostgreSQL Database';

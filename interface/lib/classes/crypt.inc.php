@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2008, Till Brehm, projektfarm Gmbh
+Copyright (c) 2024, Till Brehm, ISPConfig UG
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -28,36 +28,22 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/******************************************
-* Begin Form configuration
-******************************************/
+class crypt {
+	
+	/**
+	 * Encode passwords for PostgreSQL with scram-sha-256
+	 *
+	 * @param  mixed $password
+	 * @return string
+	 */
 
-$list_def_file = "list/database.list.php";
-$tform_def_file = "form/database.tform.php";
-
-/******************************************
-* End Form configuration
-******************************************/
-
-require_once '../../lib/config.inc.php';
-require_once '../../lib/app.inc.php';
-
-//* Check permissions for module
-$app->auth->check_module_permissions('sites');
-
-$app->uses("tform_actions");
-class page_action extends tform_actions {
-	function onBeforeDelete() {
-		global $app, $conf;
-		if($app->tform->checkPerm($this->id, 'd') == false) $app->error($app->lng('error_no_delete_permission'));
-
-		// $app->uses('sites_database_plugin');
-		//$app->sites_database_plugin->processDatabaseDelete($this->id);
+	public function postgres_scram_sha_256($password) {
+		$salt = openssl_random_pseudo_bytes(16); // Salt size = 16
+		$digest_key = hash_pbkdf2("sha256", $password, $salt, 4096, 32, true); // Rounds 4096 and  Digest length = 32
+		$client_key = hash_hmac("sha256", 'Client Key', $digest_key, true);
+		$stored_key = hash("sha256", $client_key, true);
+		$server_key = hash_hmac("sha256", 'Server Key', $digest_key, true);
+		return sprintf('SCRAM-SHA-256$4096:%s$%s:%s', base64_encode($salt), base64_encode($stored_key), base64_encode($server_key));
 	}
 
 }
-
-$page = new page_action;
-$page->onDelete();
-
-?>

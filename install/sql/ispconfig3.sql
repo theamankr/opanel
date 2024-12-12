@@ -233,6 +233,7 @@ CREATE TABLE `client` (
   `default_dbserver` int(11) NOT NULL DEFAULT '1',
   `dns_servers` text,
   `limit_database` int(11) NOT NULL DEFAULT '-1',
+  `limit_database_postgresql` int(11) NOT NULL default '-1',
   `limit_database_user` int(11) NOT NULL DEFAULT '-1',
   `limit_database_quota` int(11) NOT NULL default '-1',
   `limit_cron` int(11) NOT NULL DEFAULT '0',
@@ -363,6 +364,7 @@ CREATE TABLE `client_template` (
   `limit_dns_record` int(11) NOT NULL default '-1',
   `db_servers` text,
   `limit_database` int(11) NOT NULL default '-1',
+  `limit_database_postgresql` int(11) NOT NULL default '-1',
   `limit_database_user` int(11) NOT NULL DEFAULT '-1',
   `limit_database_quota` int(11) NOT NULL default '-1',
   `limit_cron` int(11) NOT NULL default '0',
@@ -1949,6 +1951,7 @@ CREATE TABLE IF NOT EXISTS `web_database_user` (
   `database_password` varchar(64) DEFAULT NULL,
   `database_password_sha2` varchar(70) DEFAULT NULL,
   `database_password_mongo` varchar(32) DEFAULT NULL,
+  `database_password_postgres` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`database_user_id`)
 )  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

@@ -56,6 +56,16 @@ $form["auth_preset"]["perm_user"] = 'riud'; //r = read, i = insert, u = update, 
 $form["auth_preset"]["perm_group"] = 'riud'; //r = read, i = insert, u = update, d = delete
 $form["auth_preset"]["perm_other"] = ''; //r = read, i = insert, u = update, d = delete
 
+$app->uses('getconf,system');
+$web_config = $app->getconf->get_global_config('sites');
+
+// Available database types
+$database_type = ['mysql' => 'MySQL'];
+if($web_config['postgresql_database'] == 'y') {
+	$database_type['postgresql'] = 'PostgreSQL';
+}
+
+
 $form["tabs"]['database'] = array (
 	'title'  => "Database",
 	'width'  => 100,
@@ -90,10 +100,7 @@ $form["tabs"]['database'] = array (
 			'datatype' => 'VARCHAR',
 			'formtype' => 'SELECT',
 			'default' => 'mysql',
-			'value'  => array(
-				/*'mongo' => 'MongoDB',*/
-				'mysql' => 'MySQL'
-			)
+			'value'  => $database_type
 		),
 		'backup_interval' => [
 			'datatype' => 'VARCHAR',

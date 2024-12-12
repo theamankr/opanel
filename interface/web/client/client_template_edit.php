@@ -80,6 +80,15 @@ class page_action extends tform_actions {
 		} else {
 			$app->tpl->setVar("show_aps_menu", 0);
 		}
+
+		$app->uses('getconf,system');
+		$web_config = $app->getconf->get_global_config('sites');
+		if($web_config['postgresql_database'] == 'y') {
+			$app->tpl->setVar('show_postgresql', true);
+		} else {
+			$app->tpl->setVar('show_postgresql', false);
+		}
+
 		parent::onShowEnd();
 	}
 

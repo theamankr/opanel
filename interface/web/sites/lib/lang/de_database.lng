@@ -52,4 +52,5 @@ $wb['daily_backup_txt'] = 'täglich';
 $wb['weekly_backup_txt'] = 'wöchentlich';
 $wb['monthly_backup_txt'] = 'monatlich';
 $wb['backup_interval_txt'] = 'Backup-Interval';
-?>
+$wb['error_db_user_in_use_txt'] = 'Der Datenbank-Benutzer wird bereits verwendet. Wähle einen anderen Benutzer aus.';
+$wb['error_db_ro_user_in_use_txt'] = 'Der nur lesen Datenbank-Benutzer wird bereits verwendet. Wähle einen anderen Benutzer aus.';

@@ -52,4 +52,5 @@ $wb['daily_backup_txt'] = 'Günlük';
 $wb['weekly_backup_txt'] = 'Haftalık';
 $wb['monthly_backup_txt'] = 'Aylık';
 $wb['backup_interval_txt'] = 'Yedekleme Sıklığı';
-?>
+$wb['error_db_user_in_use_txt'] = 'The database user is already in use. Please select a different user.';
+$wb['error_db_ro_user_in_use_txt'] = 'The readonly database user is already in use. Please select a different user.';

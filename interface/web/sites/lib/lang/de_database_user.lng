@@ -22,4 +22,4 @@ $wb['globalsearch_searchfield_watermark_txt'] = 'Suche';
 $wb['globalsearch_suggestions_text_txt'] = 'Vorschläge';
 $wb['limit_database_user_txt'] = 'The max. number of database users is reached.';
 $wb['database_password_error_empty'] = 'Datenbank-Passwort ist leer.';
-?>
+$wb['error_del_db_user_in_use_txt'] = 'Der Benutzer kann nicht gelöscht werden. Er wird noch von einer Datenbank verwendet.';

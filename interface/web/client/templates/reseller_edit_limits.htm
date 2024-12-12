@@ -343,9 +343,16 @@
                     </select></div>
                 </div>
                 <div class="form-group">
-                    <label for="limit_database" class="col-sm-3 control-label">{tmpl_var name='limit_database_txt'}</label>
+                    <label for="limit_database" class="col-sm-3 control-label">{tmpl_var name='limit_database_txt'} (MySQL)</label>
                     <div class="col-sm-9"><input type="text" name="limit_database" id="limit_database" value="{tmpl_var name='limit_database'}" class="form-control" /></div></div>
+                <tmpl_if name="show_postgresql">
                 <div class="form-group">
+                    <label for="limit_database_postgresql" class="col-sm-3 control-label">{tmpl_var name='limit_database_txt'} (PostgreSQL)</label>
+                    <div class="col-sm-9"><input type="text" name="limit_database_postgresql" id="limit_database_postgresql" value="{tmpl_var name='limit_database_postgresql'}" class="form-control" /></div></div>
+                <tmpl_else>
+                    <input type="hidden" name="limit_database_postgresql" value="{tmpl_var name='limit_database_postgresql'}">
+                </tmpl_if>
+                    <div class="form-group">
                     <label for="limit_database_user" class="col-sm-3 control-label">{tmpl_var name='limit_database_user_txt'}</label>
                     <div class="col-sm-9"><input type="text" name="limit_database_user" id="limit_database_user" value="{tmpl_var name='limit_database_user'}" class="form-control" /></div></div>
 				<div class="form-group">

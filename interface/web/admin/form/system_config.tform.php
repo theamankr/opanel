@@ -252,7 +252,16 @@ $form["tabs"]['sites'] = array (
 			'formtype' => 'CHECKBOX',
 			'default' => 'y',
 			'value'  => array(0 => 'n', 1 => 'y')
-		),	
+		),
+		'postgresql_database' => array (
+			'datatype' => 'VARCHAR',
+			'formtype' => 'CHECKBOX',
+			'default'  => 'n',
+			'value' => array (
+				0 => 'n',
+				1 => 'y'
+			)
+		),
 		//#################################
 		// END Datatable fields
 		//#################################

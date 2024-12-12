@@ -49,10 +49,16 @@ $app->uses("tform_actions");
 
 class page_action extends tform_actions {
 	function onBeforeDelete() {
-		global $app; $conf;
+		global $app, $conf;
 		if($app->tform->checkPerm($this->id, 'd') == false) $app->error($app->lng('error_no_delete_permission'));
 
 		$old_record = $app->tform->getDataRecord($this->id);
+
+		// Check if there are databases still using this user
+		$tmp = $app->db->queryOneRecord('SELECT `database_id` FROM `web_database` WHERE `database_user_id` = ? OR `database_ro_user_id` = ?', $this->id, $this->id);
+		if(!empty($tmp)) {
+			$app->error($app->tform->lng('error_del_db_user_in_use_txt'));
+		}
 
 		/* we cannot use datalogDelete here, as we need to set server_id to 0 */
 		$app->db->query("DELETE FROM `web_database_user` WHERE `database_user_id` = ?", $this->id);
@@ -62,7 +68,7 @@ class page_action extends tform_actions {
 	}
 
 	function onAfterDelete() { // this has to be done on AFTER delete, because we need the db user still in the database when the server plugin processes the datalog
-		global $app; $conf;
+		global $app, $conf;
 
 		//* Update all records that belog to this user
 		$records = $app->db->queryAllRecords("SELECT database_id FROM web_database WHERE database_user_id = ?", $this->id);

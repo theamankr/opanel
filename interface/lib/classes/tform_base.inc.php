@@ -1379,6 +1379,10 @@ class tform_base {
 							} elseif (isset($field['encryption']) && $field['encryption'] == 'MYSQLSHA2') {
 								$record[$key] = $app->db->getPasswordHash($record[$key], 'caching_sha2_password');
 								$sql_insert_val .= "'".$app->db->quote($record[$key])."', ";
+							} elseif (isset($field['encryption']) && $field['encryption'] == 'POSTGRESHA256') {
+								$app->uses('crypt');
+								$record[$key] = $app->crypt->postgres_scram_sha_256($record[$key]);
+								$sql_insert_val .= "'".$app->db->quote($record[$key])."', ";
 							} else {
 								$record[$key] = md5(stripslashes($record[$key]));
 								$sql_insert_val .= "'".$app->db->quote($record[$key])."', ";
@@ -1412,6 +1416,10 @@ class tform_base {
 								$sql_update .= "`$key` = '".$app->db->quote($record[$key])."', ";
 							} elseif (isset($field['encryption']) && $field['encryption'] == 'MYSQLSHA2') {
 								$record[$key] = $app->db->getPasswordHash($record[$key], 'caching_sha2_password');
+								$sql_update .= "`$key` = '".$app->db->quote($record[$key])."', ";
+							} elseif (isset($field['encryption']) && $field['encryption'] == 'POSTGRESHA256') {
+								$app->uses('crypt');
+								$record[$key] = $app->crypt->postgres_scram_sha_256($record[$key]);
 								$sql_update .= "`$key` = '".$app->db->quote($record[$key])."', ";
 							} else {
 								$record[$key] = md5(stripslashes($record[$key]));

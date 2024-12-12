@@ -40,7 +40,7 @@ show_aps_menu=n
 client_protection=y
 ssh_authentication=
 le_caa_autocreate_options=y
-
+postgresql_database=n
 
 [tools]
 

@@ -364,3 +364,4 @@ $wb['soft_delete_keep_7_txt'] = 'Purge after 7 days';
 $wb['soft_delete_keep_30_txt'] = 'Purge after 30 days';
 $wb['soft_delete_keep_90_txt'] = 'Purge after 90 days';
 $wb['soft_delete_keep_365_txt'] = 'Purge after 365 days';
+$wb['postgresql_database_txt'] = 'PostgreSQL Database';

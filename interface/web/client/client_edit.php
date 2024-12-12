@@ -103,6 +103,14 @@ class page_action extends tform_actions {
 		$app->tpl->setVar('contact_name', $tmp['contact_name']);
 		$app->tpl->setVar('email', $tmp['email']);
 
+		$app->uses('getconf,system');
+		$web_config = $app->getconf->get_global_config('sites');
+		if($web_config['postgresql_database'] == 'y') {
+			$app->tpl->setVar('show_postgresql', true);
+		} else {
+			$app->tpl->setVar('show_postgresql', false);
+		}
+
 		parent::onShowEdit();
 	}
 

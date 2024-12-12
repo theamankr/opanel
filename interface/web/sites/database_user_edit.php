@@ -168,11 +168,13 @@ class page_action extends tform_actions {
 			$this->dataRecord['database_user'] = substr($dbuser_prefix . $this->dataRecord['database_user'], 0, 32);
 		}
 
-		// always copy over the password to the SHA2 column
+		// always copy over the password to the SHA2 and postgres column
 		if($this->dataRecord['database_password']) {
 			$this->dataRecord['database_password_sha2'] = $this->dataRecord['database_password'];
+			$this->dataRecord['database_password_postgres'] = $this->dataRecord['database_password'];
 		} else {
 			$this->dataRecord['database_password_sha2'] = '';
+			$this->dataRecord['database_password_postgres'] = '';
 		}
 
 		/* prepare password for MongoDB */
@@ -197,6 +199,7 @@ class page_action extends tform_actions {
 
 		// always copy over the password to the SHA2 column
 		$this->dataRecord['database_password_sha2'] = $this->dataRecord['database_password'];
+		$this->dataRecord['database_password_postgres'] = $this->dataRecord['database_password'];
 
 		//* Get the database name and database user prefix
 		$app->uses('getconf,tools_sites');
