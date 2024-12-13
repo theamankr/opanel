@@ -152,21 +152,15 @@
 	function getDKIM() {
 		var domain_id = jQuery('#domain').val();
 		var dkim_selector = jQuery('#dkim_selector').val();
-		var dkim_public = jQuery('#dkim_public').val();
 		jQuery.getJSON('mail/ajax_get_json.php'+ '?' + Math.round(new Date().getTime()), {
 			domain_id : domain_id,
-			dkim_public : dkim_public,
 			dkim_selector : dkim_selector,
 			type : "create_dkim"
 		}, function(data) {
-                        var dkim_txt = 'v=DKIM1; t=s; p=' + data['dns_record'].replace(/(\r\n|\n|\r)/gm, "");
-			//var dns=data['dkim_selector'] + '._domainkey.' + data['domain'] + '. 3600   IN	TXT	' + dkim_txt.match(new RegExp('.{1,' + '200' + '}', 'g')).map(chunk =>  '"' + chunk + '"').join('');
-            var dns=data['dkim_selector'] + '._domainkey.' + data['domain'] + '. 3600   IN	TXT	"' + dkim_txt + '"';
-
 			$("#dkim_selector").val(data.dkim_selector);
 			$("#dkim_public").val(data.dkim_public);
 			$("#dkim_private").val(data.dkim_private);
-			$("#dns_record").val(dns);
+			$("#dns_record").val(data.dns_record);
 			$('#dkim').prop("checked", true);
 		});
 	};
