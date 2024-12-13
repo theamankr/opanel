@@ -3592,7 +3592,7 @@ class installer_base extends stdClass {
 		caselog($command.' &> /dev/null', __FILE__, __LINE__, "EXECUTED: $command", "Failed to execute the command $command");
 
 		//* Chmod the files and directories in the install dir
-		$command = 'chmod -R 750 '.$install_dir.'/*';
+		$command = 'chmod -R u=rwx,g=rx,-x+X,o= '.$install_dir.'/*';
 		caselog($command.' &> /dev/null', __FILE__, __LINE__, "EXECUTED: $command", "Failed to execute the command $command");
 
 		//* chown the interface files to the ispconfig user and group
@@ -3600,7 +3600,7 @@ class installer_base extends stdClass {
 		caselog($command.' &> /dev/null', __FILE__, __LINE__, "EXECUTED: $command", "Failed to execute the command $command");
 
 		//* Chmod the files and directories in the acme dir
-		$command = 'chmod -R 755 '.$install_dir.'/interface/acme';
+		$command = 'chmod -R o+rX '.$install_dir.'/interface/acme';
 		caselog($command.' &> /dev/null', __FILE__, __LINE__, "EXECUTED: $command", "Failed to execute the command $command");
 
 		//* chown the server files to the root user and group
@@ -3626,10 +3626,10 @@ class installer_base extends stdClass {
 		caselog($command.' &> /dev/null', __FILE__, __LINE__, "EXECUTED: $command", "Failed to execute the command $command");
 
 		//* Make the global language file directory group writable
-		exec("chmod -R 770 $install_dir/interface/lib/lang");
+		exec("chmod -R g+w $install_dir/interface/lib/lang");
 
 		//* Make the temp directory for language file exports writable
-		if(is_dir($install_dir.'/interface/web/temp')) exec("chmod -R 770 $install_dir/interface/web/temp");
+		if(is_dir($install_dir.'/interface/web/temp')) exec("chmod -R g+w $install_dir/interface/web/temp");
 
 		//* Make all interface language file directories group writable
 		$handle = @opendir($install_dir.'/interface/web');
@@ -3640,7 +3640,7 @@ class installer_base extends stdClass {
 					chmod($install_dir.'/interface/web'.'/'.$file.'/lib/lang', 0770);
 					while ($lang_file = @readdir($handle2)) {
 						if ($lang_file != '.' && $lang_file != '..') {
-							chmod($install_dir.'/interface/web'.'/'.$file.'/lib/lang/'.$lang_file, 0770);
+							chmod($install_dir.'/interface/web'.'/'.$file.'/lib/lang/'.$lang_file, 0660);
 						}
 					}
 				}
@@ -3648,8 +3648,8 @@ class installer_base extends stdClass {
 		}
 
 		//* Make the APS directories group writable
-		exec("chmod -R 770 $install_dir/interface/web/sites/aps_meta_packages");
-		exec("chmod -R 770 $install_dir/server/aps_packages");
+		exec("chmod -R g+w $install_dir/interface/web/sites/aps_meta_packages");
+		exec("chmod -R g+w $install_dir/server/aps_packages");
 
 		//* make sure that the server config file (not the interface one) is only readable by the root user
 		chmod($install_dir.'/server/lib/config.inc.php', 0600);
@@ -3660,6 +3660,11 @@ class installer_base extends stdClass {
 		chmod($install_dir.'/interface/lib/config.inc.php', 0600);
 		chown($install_dir.'/interface/lib/config.inc.php', 'ispconfig');
 		chgrp($install_dir.'/interface/lib/config.inc.php', 'ispconfig');
+		if(is_file($install_dir.'/interface/lib/config.inc.php~')) {
+			chmod($install_dir.'/interface/lib/config.inc.php~', 0600);
+			chown($install_dir.'/interface/lib/config.inc.php~', 'ispconfig');
+			chgrp($install_dir.'/interface/lib/config.inc.php~', 'ispconfig');
+		}
 
 		chmod($install_dir.'/server/lib/remote_action.inc.php', 0600);
 		chown($install_dir.'/server/lib/remote_action.inc.php', 'root');
@@ -3672,7 +3677,7 @@ class installer_base extends stdClass {
 		}
 
 		if(is_dir($install_dir.'/interface/invoices')) {
-			exec('chmod -R 770 '.escapeshellarg($install_dir.'/interface/invoices'));
+			exec('chmod -R g+w '.escapeshellarg($install_dir.'/interface/invoices'));
 			exec('chown -R ispconfig:ispconfig '.escapeshellarg($install_dir.'/interface/invoices'));
 		}
 
@@ -3711,7 +3716,7 @@ class installer_base extends stdClass {
 		}
 
 		//* Make the shell scripts executable
-		$command = "chmod +x $install_dir/server/scripts/*.sh";
+		$command = "chmod +x $install_dir/server/scripts/*.sh $install_dir/server/scripts/ispconfig_patch $install_dir/server/scripts/vlogger";
 		caselog($command.' &> /dev/null', __FILE__, __LINE__, "EXECUTED: $command", "Failed to execute the command $command");
 
 		if ($this->install_ispconfig_interface == true && isset($conf['interface_password']) && $conf['interface_password']!='admin') {
