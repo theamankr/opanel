@@ -932,6 +932,12 @@ $form["tabs"]['web'] = array(
 			'default' => 'n',
 			'value' => array(0 => 'n',1 => 'y')
 		),
+		'vhost_force_ipv6' => array(
+			'datatype' => 'VARCHAR',
+			'formtype' => 'CHECKBOX',
+			'default' => 'n',
+			'value' => array(0 => 'n', 1 => 'y')
+		),
 		'vhost_proxy_protocol_enabled' => array (
 			'datatype' => 'VARCHAR',
 			'formtype' => 'SELECT',
