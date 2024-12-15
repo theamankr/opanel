@@ -88,22 +88,10 @@
 				</div>
             </div>
             <div class="form-group">
-                <label class="col-sm-2 control-label">{tmpl_var name='dmarc_rf_txt'}</label>
-                 <div class="col-sm-1">
-                    <input type="checkbox" value="1" id="dmarc_rf_afrf" name="dmarc_rf_afrf" {tmpl_var name='dmarc_rf_afrf'}/>
-                </div>
-                <div class="col-sm-3 input-sm">
-                    {tmpl_var name='dmarc_rf_afrf_txt'}
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="col-sm-2 control-label control-label-plain">{tmpl_var name='dmarc_rf_iodef'}</label>
-                <div class="col-sm-1">
-                    <input type="checkbox" value="1" id="dmarc_rf_iodef" name="dmarc_rf_iodef" {tmpl_var name='dmarc_rf_iodef'}/>
-                </div>
-                <div class="col-sm-3 input-sm">
-                    {tmpl_var name='dmarc_rf_iodef_txt'}
-                </div>
+              <label for="dmarc_rf" class="col-sm-2 control-label">{tmpl_var name='dmarc_rf_txt'}</label>
+              <div class="col-sm-6">
+                <select name="dmarc_rf" id="dmarc_rf" class="form-control">{tmpl_var name='dmarc_rf'}</select>
+              </div>
             </div>
 			<div class="form-group">
 				<label for="dmarc_pct" class="col-sm-2 control-label">{tmpl_var name='dmarc_pct_txt'}</label>
