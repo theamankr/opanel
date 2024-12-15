@@ -884,8 +884,10 @@ class installer_base extends stdClass {
 				$addr_cleanup = "SUBSTRING_INDEX({$addr_cleanup}, '{$recipient_delimiter}', 1)";
 			}
 			$no_addr_extension = "CONCAT({$addr_cleanup}, '@%d')";
+			$no_addr_extension_alt_domain = "CONCAT({$addr_cleanup}, 's2.destination')";
 		} else {
 			$no_addr_extension = "''";
+			$no_addr_extension_alt_domain = "''";
 		}
 		unset($out);
 
@@ -897,6 +899,7 @@ class installer_base extends stdClass {
 		$content = str_replace('{mysql_server_ip}', $conf['mysql']['ip'], $content);
 		$content = str_replace('{server_id}', $conf['server_id'], $content);
 		$content = str_replace('{address_without_extension}', $no_addr_extension, $content);
+		$content = str_replace('{address_without_extension_alt_domain}', $no_addr_extension_alt_domain, $content);
 		wf($full_file_name, $content);
 
 		//* Changing mode and group of the new created config file
