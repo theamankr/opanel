@@ -168,7 +168,15 @@ class letsencrypt {
 			$cert_selection_command = "--expand";
 		}
 
-		$cmd = $letsencrypt . " certonly -n --text --agree-tos $cert_selection_command --authenticator webroot --server $acme_version --rsa-key-size 4096 --email webmaster@$primary_domain $webroot_args";
+		if (version_compare($letsencrypt_version, '2.0', '>=')) {
+			$app->log("LE version is " . $letsencrypt_version . ", so using --elliptic-curve secp256r1 instead of --rsa-key-size 4096", LOGLEVEL_DEBUG);
+			$acme_key_size = "--elliptic-curve secp256r1";
+		} else {
+			$acme_key_size = "--rsa-key-size 4096";
+		}
+
+		$cmd = $letsencrypt . " certonly -n --text --agree-tos $cert_selection_command --authenticator webroot --server $acme_version $acme_key_size --email webmaster@$primary_domain $webroot_args";
+
 
 		return $cmd;
 	}
