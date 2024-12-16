@@ -23,4 +23,7 @@ $wb['type_txt'] = 'Tipo';
 $wb['relayhost_txt'] = 'Relayhost';
 $wb['relayhost_user_txt'] = 'Relayhost User';
 $wb['relayhost_password_txt'] = 'Relayhost Password';
+$wb['dkim_enabled_dns_not_found_txt'] = 'DKIM enabled, record not found in DNS yet.';
+$wb['dkim_enabled_resolving_ok_txt'] = 'DKIM enabled, DNS resolving OK.';
+$wb['dkim_enabled_mismatched_record_txt'] = 'DKIM enabled, mismatched record.';
 $wb['dkim_auto_dns_txt'] = 'Managed zone, dns updated automatically';

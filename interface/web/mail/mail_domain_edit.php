@@ -250,9 +250,9 @@ class page_action extends tform_actions {
         array_walk($keyparts, function(&$value, $key) { $value = '"'.$value.'"'; } );
         $dkim_txt = implode('', $keyparts);
 		*/
-		$dkim_txt = '"v=DKIM1; t=s; p=' . $dns_key . '"';
+		$dkim_txt = 'v=DKIM1; t=s; p=' . $dns_key;
 
-		$dns_record = $rec['dkim_selector'] . '._domainkey.' . $rec['domain'] . '. 3600  IN  TXT   '.$dkim_txt;
+		$dns_record = $rec['dkim_selector'] . '._domainkey.' . $rec['domain'] . '. 3600  IN  TXT   "' . $dkim_txt . '"';
 
 		$app->tpl->setVar('dkim_selector', $rec['dkim_selector'], true);
 		$app->tpl->setVar('dkim_private', $rec['dkim_private'], true);
@@ -260,6 +260,20 @@ class page_action extends tform_actions {
 		if (!empty($rec['dkim_public'])) $app->tpl->setVar('dns_record', $dns_record, true);
 
 		if($this->id > 0) {
+			if ($this->dataRecord['dkim'] == 'y') {
+				$dns_record_status = dns_get_record($rec['dkim_selector'] . '._domainkey.' . $rec['domain'], DNS_TXT);
+				if (empty($dns_record_status) || empty($dns_record_status[0]['txt'])) {
+					// Record not found
+					$app->tpl->setVar('dkim_status', $app->tform->wordbook['dkim_enabled_dns_not_found_txt'], true);
+				}
+				elseif ($dns_record_status[0]['txt'] == $dkim_txt) {
+					$app->tpl->setVar('dkim_status', '<span class="fa fa-check-circle-o" aria-hidden="false" title="' . $app->tform->wordbook['dkim_enabled_resolving_ok_txt'] . '"</span>', false);
+				}
+				else {
+					// Mismatch in record!
+					$app->tpl->setVar('dkim_status', $app->tform->wordbook['dkim_enabled_mismatched_record_txt'], true);
+				}
+			}
 			$soa = $this->find_soa_domain($this->dataRecord['domain']);
 			if ( !empty($soa) ) {
 				$app->tpl->setVar('dkim_auto_dns', $app->tform->lng('dkim_auto_dns_txt'), true);

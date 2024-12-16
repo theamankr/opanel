@@ -23,4 +23,7 @@ $wb['dkim_selector_error'] = '无效的 DKIM 选择器。仅使用小写字母�
 $wb['relayhost_txt'] = 'Relayhost';
 $wb['relayhost_user_txt'] = 'Relayhost 用户';
 $wb['relayhost_password_txt'] = 'Relayhost 密码';
+$wb['dkim_enabled_dns_not_found_txt'] = 'DKIM enabled, record not found in DNS yet.';
+$wb['dkim_enabled_resolving_ok_txt'] = 'DKIM enabled, DNS resolving OK.';
+$wb['dkim_enabled_mismatched_record_txt'] = 'DKIM enabled, mismatched record.';
 $wb['dkim_auto_dns_txt'] = 'Managed zone, dns updated automatically';
