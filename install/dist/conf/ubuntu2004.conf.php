@@ -122,6 +122,12 @@ $conf['mailman']['installed'] = false; // will be detected automatically during 
 $conf['mailman']['config_dir'] = '/etc/mailman';
 $conf['mailman']['init_script'] = 'mailman';
 
+//* Sympa
+$conf['sympa']['installed'] = false; // will be detected automatically during installation
+$conf['sympa']['config_dir'] = '/etc/sympa';
+$conf['sympa']['init_script'] = 'sympa';
+
+
 //* Getmail
 $conf['getmail']['installed'] = false; // will be detected automatically during installation
 $conf['getmail']['config_dir'] = '/etc/getmail';

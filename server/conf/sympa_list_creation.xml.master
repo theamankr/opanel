@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<list>
+    <listname>{listname}</listname>
+    <type>private_working_group</type>
+    <subject>{listname}</subject>
+    <description/>
+    <status>open</status>
+    <shared_edit>editor</shared_edit>
+    <shared_read>private</shared_read>
+    <language>en</language>
+    <owner multiple="1">
+        <email>{email}</email>
+    </owner>
+    <topic>Other</topic>
+</list>

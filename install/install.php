@@ -359,6 +359,13 @@ if($install_mode == 'standard' || strtolower($inst->simple_query('Configure Mail
 			$inst->configure_mailman();
 		}
 
+		//* Configure Sympa
+		$force = @($conf['sympa']['installed']) ? true : $inst->force_configure_app('Sympa', ($install_mode == 'expert'));
+		if($force) {
+			swriteln('Configuring Sympa');
+			$inst->configure_sympa();
+		}
+
 		//* Check for Dovecot and Courier
 		if(!$conf['dovecot']['installed'] && !$conf['courier']['installed']) {
 			$conf['dovecot']['installed'] = $inst->force_configure_app('Dovecot', ($install_mode == 'expert'));
@@ -655,6 +662,7 @@ if($conf['courier']['installed'] == true){
 }
 if($conf['dovecot']['installed'] == true && isset($conf['dovecot']['init_script']) && $conf['dovecot']['init_script'] != '') system($inst->getinitcommand($conf['dovecot']['init_script'], 'restart'));
 if($conf['mailman']['installed'] == true && isset($conf['mailman']['init_script']) && $conf['mailman']['init_script'] != '') system('nohup '.$inst->getinitcommand($conf['mailman']['init_script'], 'restart').' >/dev/null 2>&1 &');
+if($conf['sympa']['installed'] == true && isset($conf['sympa']['init_script']) && $conf['sympa']['init_script'] != '') system('nohup '.$inst->getinitcommand($conf['sympa']['init_script'], 'restart').' >/dev/null 2>&1 &');
 if($conf['apache']['installed'] == true && isset($conf['apache']['init_script']) && $conf['apache']['init_script'] != '') system($inst->getinitcommand($conf['apache']['init_script'], 'restart'));
 //* Reload is enough for nginx
 if($conf['nginx']['installed'] == true){

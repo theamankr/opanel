@@ -209,6 +209,41 @@ server {
                autoindex on;
         }
 
+        location /sympa {
+               include        fastcgi_params;
+
+               fastcgi_pass  unix:/var/run/sympa-fastcgi;
+
+               # If you changed wwsympa_url in sympa.conf, change this regex too!
+               fastcgi_split_path_info ^(/sympa)(.*)$;
+
+               fastcgi_param SCRIPT_FILENAME $document_root/wwsympa.fcgi;
+               fastcgi_param PATH_INFO $fastcgi_path_info;
+               fastcgi_param USERID sympa;
+
+               # According to RFC3875 (https://tools.ietf.org/html/rfc3875#section-4.1.14) in SERVER_NAME
+               # we should put an actual hostname user came to. For nginx it is in $host
+               # This will allow to run sympa multihost instances
+               fastcgi_param  SERVER_NAME        $host;
+        }
+
+        location /static-sympa/css {
+               alias /var/lib/sympa/css;
+        }
+
+        location /static-sympa/pictures {
+               alias /var/lib/sympa/pictures;
+        }
+
+        location /static-sympa {
+               alias /usr/share/sympa/static_content;
+        }
+
+        location ^~ /css-sympa/ {
+               alias /var/lib/sympa/css/;
+               access_log off;
+        }
+
         {use_rspamd}location /rspamd/ {
                 {use_rspamd}proxy_pass http://127.0.0.1:11334/;
                 {use_rspamd}rewrite ^//(.*) /$1;
