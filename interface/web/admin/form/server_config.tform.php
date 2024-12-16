@@ -810,6 +810,29 @@ $form["tabs"]['mail'] = array(
 			'width' => '40',
 			'maxlength' => '255'
 		),
+		'monitor_mx_records' => array(
+			'datatype' => 'VARCHAR',
+			'formtype' => 'CHECKBOX',
+			'default' => 'n',
+			'value' => array(0 => 'n', 1 => 'y')
+		),
+		'additional_smtp_hostnames' => array(
+			'datatype' => 'VARCHAR',
+			'formtype' => 'TEXT',
+			'default' => '',
+			'value' => '',
+			'width' => '20',
+			'maxlength' => '255'
+		),
+		'additional_smtp_ips' => array(
+			'datatype' => 'VARCHAR',
+			'formtype' => 'TEXT',
+			'default' => '',
+			'value' => '',
+			'width' => '20',
+			'maxlength' => '255'
+		),
+
 		//#################################
 		// END Datatable fields
 		//#################################

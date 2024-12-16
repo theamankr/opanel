@@ -167,4 +167,10 @@ $wb['monitor_title_mongodb_txt'] = 'Журнал MongoDB';
 $wb['Data Log History'] = 'Data Log History';
 $wb['Database size'] = 'Database size';
 $wb['MySQL Database size'] = 'MySQL Database size';
+$wb['monitor_title_mx_ip_match_txt'] = 'MX record to server IP match';
+$wb['monitor_serverstate_mx_ip_match_nodata_txt'] = 'No MX record check data present';
+$wb['monitor_serverstate_mx_ip_match_warning_txt'] = 'Not all DNS MX records match the server IP';
+$wb['monitor_serverstate_mx_ip_match_ok_txt'] = 'All mail domains match up with DNS.';
+$wb['monitor_serverstate_mx_ip_match_unknown_txt'] = 'Mail domains MX check unknown.';
+$wb['monitor_serverstate_mx_ip_match_note_txt'] = 'note: If your using an external smtp service for e.g. spam filtering then add that name in the Server Config -> Mail -> Additional smtp hostnames to keep them out of this list.';
 ?>

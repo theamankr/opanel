@@ -355,3 +355,6 @@ $wb['soft_delete_keep_7_txt'] = 'Purge after 7 days';
 $wb['soft_delete_keep_30_txt'] = 'Purge after 30 days';
 $wb['soft_delete_keep_90_txt'] = 'Purge after 90 days';
 $wb['soft_delete_keep_365_txt'] = 'Purge after 365 days';
+$wb['monitor_mx_records_txt'] = 'Monitor MX records for mail domains';
+$wb['additional_mx_ips_txt'] = 'Additional MX IP\'s';
+$wb['additional_mx_hostnames_txt'] = 'Additional MX hostnames';

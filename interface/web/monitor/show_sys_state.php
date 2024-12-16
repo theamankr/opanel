@@ -557,6 +557,21 @@ function _processDbState($type, $serverId, $serverState, $messages) {
 			break;
 		}
 	}
+	if ($type == 'mx_ip_match') {
+		switch ($record['state']) {
+		case 'ok':
+			$messages[$app->lng("monitor_serverstate_listok_txt")][] = $app->lng("monitor_serverstate_mx_ip_match_ok_txt");
+			break;
+		case 'warning':
+			$messages[$app->lng("monitor_serverstate_listwarning_txt")][] = $app->lng("monitor_serverstate_mx_ip_match_warning_txt") . ' ' .
+				"<a href='#' data-load-content='monitor/show_data.php?type=mx_ip_match'>[" . $app->lng("monitor_serverstate_more_txt") . "]</a>";
+			break;
+		default:
+			$messages[$app->lng("monitor_serverstate_listunknown_txt")][] = $app->lng("monitor_serverstate_mx_ip_match_unknown_txt") . ' ' .
+				"<a href='#' data-load-content='monitor/show_data.php?type=mx_ip_match'>[" . $app->lng("monitor_serverstate_more_txt") . "]</a>";
+			break;
+		}
+	}
 
 	if ($type == 'sys_log') {
 		switch ($record['state']) {

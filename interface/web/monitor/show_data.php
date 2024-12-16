@@ -114,6 +114,14 @@ case 'mailq':
 	$description = '';
 	$add_padding = true;
 	break;
+case 'mx_ip_match':
+	$template = 'templates/show_data.htm';
+	$output .= $app->tools_monitor->showMx_ip_match();
+	$time = $app->tools_monitor->getDataTime('mx_ip_match');
+	$title = $app->lng("monitor_title_mx_ip_match_txt"). ' ('. $monTransSrv .' : ' . $_SESSION['monitor']['server_name'] . ')';
+	$description = '';
+	$add_padding = true;
+	break;
 case 'raid_state':
 	$template = 'templates/show_data.htm';
 	$output .= $app->tools_monitor->showRaidState();

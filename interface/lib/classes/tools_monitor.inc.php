@@ -576,6 +576,27 @@ class tools_monitor {
 		return $html;
 	}
 
+	function showMx_ip_match() {
+		global $app;
+
+		/* fetch the Data from the DB */
+		$record = $app->db->queryOneRecord("SELECT data, state FROM monitor_data WHERE type = 'mx_ip_match' and server_id = ? ORDER BY created DESC", $_SESSION['monitor']['server_id']);
+
+		if(isset($record['data'])) {
+			$data = unserialize($record['data']);
+			$html = '<ul>';
+			foreach ($data as $domain => $text) {
+				$html .= "<li><span>$domain</span>: $text</li>";
+			}
+			$html .= '</ul>';
+			$html .= '<br /><p>'.$app->lng("monitor_serverstate_mx_ip_match_note_txt").'</p>';
+		} else {
+			$html = '<p>'.$app->lng("monitor_serverstate_mx_ip_match_nodata_txt").'</p>';
+		}
+
+		return $html;
+	}
+
 	function getDataTime($type) {
 		global $app;
 
