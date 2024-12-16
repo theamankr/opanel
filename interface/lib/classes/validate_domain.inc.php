@@ -79,7 +79,7 @@ class validate_domain {
 
 		// do not allow wildcards on alias domains
 		$result = $this->_regex_validate($field_value);
-		if(!$result) return $this->get_error('domain_error_regex');
+		if(!$result && !filter_var($field_value, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) return $this->get_error('domain_error_regex');
 
 		$result = $this->_check_unique($field_value);
 		if(!$result) return $this->get_error('domain_error_unique');
