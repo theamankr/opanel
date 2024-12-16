@@ -57,6 +57,9 @@ class page_action extends dns_page_action {
 			if ('v=spf1' === mb_substr($this->dataRecord['data'], 0, 6)) {
 				header(sprintf('Location: dns_spf_edit.php?id=%d', $this->dataRecord['id']));
 				exit;
+			} elseif ("v=DMARC1" === mb_substr($this->dataRecord["data"], 0, 8)) {
+				header(sprintf("Location: dns_dmarc_edit.php?id=%d", $this->dataRecord["id"]));
+				exit;
 			}
 		}
 	}

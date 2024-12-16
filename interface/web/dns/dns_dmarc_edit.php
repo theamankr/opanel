@@ -86,15 +86,17 @@ class page_action extends tform_actions {
 		$dmarc_pct = 100;
 		$dmarc_ri = 86400;
 		$dmarc_sp = 'same';
+		$id = $app->functions->intval($_GET['id']);
 
 		//* check for an existing dmarc-record
-		$sql = "SELECT data, active FROM dns_rr WHERE data LIKE 'v=DMARC1%' AND zone = ? AND name LIKE ? AND " . $app->tform->getAuthSQL('r') . " ORDER BY (name = ?) DESC";
-		$rec = $app->db->queryOneRecord($sql, $zone, '_dmarc%', '_dmarc.'.$domain_name.'.');
+		$sql = "SELECT zone, data, active FROM dns_rr WHERE data LIKE 'v=DMARC1%' AND ((zone = ? AND name LIKE ?) OR id = ?) AND " . $app->tform->getAuthSQL('r') . " ORDER BY (name = ?) DESC";
+		$rec = $app->db->queryOneRecord($sql, $zone, '_dmarc%', $id, '_dmarc.'.$domain_name.'.');
 		if (isset($rec) && !empty($rec) ) {
 			$this->id = 1;
 			$old_data = strtolower($rec['data']);
 			$app->tpl->setVar("data", $old_data, true);
 			if ($rec['active'] == 'Y') $app->tpl->setVar("active", '<input name="active" id="active" value="" type="checkbox" CHECKED>'); else $app->tpl->setVar("active", '<input name="active" id="active" value="" type="checkbox">');
+			$zone = $rec['zone'];
 			$dmarc_rua = '';
 			$dmarc_ruf = '';
 			$dmac_rf = '';
@@ -120,6 +122,10 @@ class page_action extends tform_actions {
 				if (preg_match("/^pct=/", $part)) $dmarc_pct = str_replace('pct=', '', $part);
 				if (preg_match("/^ri=/", $part)) $dmarc_ri = str_replace('ri=', '', $part);
 			}
+		}
+		else {
+			// Default to active.
+			$app->tpl->setVar("active", '<input name="active" id="active" value="1" type="checkbox" checked="">');
 		}
 
 		//set html-values
