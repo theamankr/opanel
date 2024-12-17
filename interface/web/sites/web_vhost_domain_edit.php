@@ -279,12 +279,12 @@ class page_action extends tform_actions {
 			$client_group_id = $app->functions->intval($_SESSION["s"]["user"]["default_group"]);
 
 			if($this->_vhostdomain_type == 'domain') {
-				$client = $app->db->queryOneRecord("SELECT client.client_id, client.limit_web_domain, client.web_servers, client.default_webserver, client.contact_name, CONCAT(IF(client.company_name != '', CONCAT(client.company_name, ' :: '), ''), client.contact_name, ' (', client.username, IF(client.customer_no != '', CONCAT(', ', client.customer_no), ''), ')') as contactname, sys_group.name, client." . implode(", client.", $read_limits) . " FROM sys_group, client WHERE sys_group.client_id = client.client_id and sys_group.groupid = ?", $client_group_id);
+				$client = $app->db->queryOneRecord("SELECT client.client_id, client.limit_web_domain, client.web_servers, client.default_webserver, client.contact_name, " . $app->functions->get_client_sql_concat_query() . " as contactname, sys_group.name, client." . implode(", client.", $read_limits) . " FROM sys_group, client WHERE sys_group.client_id = client.client_id and sys_group.groupid = ?", $client_group_id);
 				$app->tpl->setVar('only_one_server', $only_one_server);
 			} elseif($this->_vhostdomain_type == 'subdomain') {
-				$client = $app->db->queryOneRecord("SELECT client.client_id, client.limit_web_subdomain, client.web_servers, client.default_webserver, client.contact_name, CONCAT(IF(client.company_name != '', CONCAT(client.company_name, ' :: '), ''), client.contact_name, ' (', client.username, IF(client.customer_no != '', CONCAT(', ', client.customer_no), ''), ')') as contactname, sys_group.name, client." . implode(", client.", $read_limits) . " FROM sys_group, client WHERE sys_group.client_id = client.client_id and sys_group.groupid = ?", $client_group_id);
+				$client = $app->db->queryOneRecord("SELECT client.client_id, client.limit_web_subdomain, client.web_servers, client.default_webserver, client.contact_name, " . $app->functions->get_client_sql_concat_query() . " as contactname, sys_group.name, client." . implode(", client.", $read_limits) . " FROM sys_group, client WHERE sys_group.client_id = client.client_id and sys_group.groupid = ?", $client_group_id);
 			} elseif($this->_vhostdomain_type == 'aliasdomain') {
-				$client = $app->db->queryOneRecord("SELECT client.client_id, client.limit_web_aliasdomain, client.web_servers, client.default_webserver, client.contact_name, CONCAT(IF(client.company_name != '', CONCAT(client.company_name, ' :: '), ''), client.contact_name, ' (', client.username, IF(client.customer_no != '', CONCAT(', ', client.customer_no), ''), ')') as contactname, sys_group.name, client." . implode(", client.", $read_limits) . " FROM sys_group, client WHERE sys_group.client_id = client.client_id and sys_group.groupid = ?", $client_group_id);
+				$client = $app->db->queryOneRecord("SELECT client.client_id, client.limit_web_aliasdomain, client.web_servers, client.default_webserver, client.contact_name, " . $app->functions->get_client_sql_concat_query() . " as contactname, sys_group.name, client." . implode(", client.", $read_limits) . " FROM sys_group, client WHERE sys_group.client_id = client.client_id and sys_group.groupid = ?", $client_group_id);
 			}
 			$client = $app->functions->htmlentities($client);
 
@@ -321,7 +321,7 @@ class page_action extends tform_actions {
 
 			if ($settings['use_domain_module'] != 'y') {
 				// Fill the client select field
-				$sql = "SELECT sys_group.groupid, sys_group.name, CONCAT(IF(client.company_name != '', CONCAT(client.company_name, ' :: '), ''), client.contact_name, ' (', client.username, IF(client.customer_no != '', CONCAT(', ', client.customer_no), ''), ')') as contactname FROM sys_group, client WHERE sys_group.client_id = client.client_id AND client.parent_client_id = ? ORDER BY client.company_name, client.contact_name, sys_group.name";
+				$sql = "SELECT sys_group.groupid, sys_group.name, " . $app->functions->get_client_sql_concat_query() . " as contactname FROM sys_group, client WHERE sys_group.client_id = client.client_id AND client.parent_client_id = ? ORDER BY client.company_name, client.contact_name, sys_group.name";
 				$records = $app->db->queryAllRecords($sql, $client['client_id']);
 				$records = $app->functions->htmlentities($records);
 				$tmp = $app->db->queryOneRecord("SELECT groupid FROM sys_group WHERE client_id = ?", $client['client_id']);
@@ -539,7 +539,7 @@ class page_action extends tform_actions {
 					$this->dataRecord["sys_groupid"] = $tmp["sys_groupid"];
 				}
 				// Fill the client select field
-				$sql = "SELECT sys_group.groupid, sys_group.name, CONCAT(IF(client.company_name != '', CONCAT(client.company_name, ' :: '), ''), client.contact_name, ' (', client.username, IF(client.customer_no != '', CONCAT(', ', client.customer_no), ''), ')') as contactname FROM sys_group, client WHERE sys_group.client_id = client.client_id AND sys_group.client_id > 0 ORDER BY client.company_name, client.contact_name, sys_group.name";
+				$sql = "SELECT sys_group.groupid, sys_group.name, " . $app->functions->get_client_sql_concat_query() . " as contactname FROM sys_group, client WHERE sys_group.client_id = client.client_id AND sys_group.client_id > 0 ORDER BY client.company_name, client.contact_name, sys_group.name";
 				$clients = $app->db->queryAllRecords($sql);
 				$clients = $app->functions->htmlentities($clients);
 				$client_select = "<option value='0'></option>";

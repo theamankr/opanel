@@ -76,14 +76,14 @@ class page_action extends tform_actions {
 		$settings = $app->getconf->get_global_config('domains');
 
 		if($_SESSION["s"]["user"]["typ"] == 'admin' && $settings['use_domain_module'] == 'y') {
-			$sql = "SELECT CONCAT(IF(client.company_name != '', CONCAT(client.company_name, ' :: '), ''), client.contact_name, ' (', client.username, IF(client.customer_no != '', CONCAT(', ', client.customer_no), ''), ')') as contactname FROM sys_group, client WHERE sys_group.client_id = client.client_id AND sys_group.groupid = ?";
+			$sql = "SELECT " . $app->functions->get_client_sql_concat_query() . " as contactname FROM sys_group, client WHERE sys_group.client_id = client.client_id AND sys_group.groupid = ?";
 			$clients = $app->db->queryAllRecords($sql, $this->dataRecord['sys_groupid']);
 			$client_select = '<option value="dummy">' . $clients[0]['contactname'] . '</option>';
 			$app->tpl->setVar("client_group_name", $client_select);
 		}
 		elseif($_SESSION["s"]["user"]["typ"] == 'admin' && $settings['use_domain_module'] != 'y') {
 			// Getting Clients of the user
-			$sql = "SELECT sys_group.groupid, sys_group.name, CONCAT(IF(client.company_name != '', CONCAT(client.company_name, ' :: '), ''), client.contact_name, ' (', client.username, IF(client.customer_no != '', CONCAT(', ', client.customer_no), ''), ')') as contactname FROM sys_group, client WHERE sys_group.client_id = client.client_id AND sys_group.client_id > 0 ORDER BY client.company_name, client.contact_name, sys_group.name";
+			$sql = "SELECT sys_group.groupid, sys_group.name, " . $app->functions->get_client_sql_concat_query() . " as contactname FROM sys_group, client WHERE sys_group.client_id = client.client_id AND sys_group.client_id > 0 ORDER BY client.company_name, client.contact_name, sys_group.name";
 
 			$clients = $app->db->queryAllRecords($sql);
 			$clients = $app->functions->htmlentities($clients);
@@ -102,7 +102,7 @@ class page_action extends tform_actions {
 
 			// Get the limits of the client
 			$client_group_id = $_SESSION["s"]["user"]["default_group"];
-			$client = $app->db->queryOneRecord("SELECT client.client_id, client.contact_name, client.default_mailserver, CONCAT(IF(client.company_name != '', CONCAT(client.company_name, ' :: '), ''), client.contact_name, ' (', client.username, IF(client.customer_no != '', CONCAT(', ', client.customer_no), ''), ')') as contactname, sys_group.name FROM sys_group, client WHERE sys_group.client_id = client.client_id and sys_group.groupid = ? order by client.contact_name", $client_group_id);
+			$client = $app->db->queryOneRecord("SELECT client.client_id, client.contact_name, client.default_mailserver, " . $app->functions->get_client_sql_concat_query() . " as contactname, sys_group.name FROM sys_group, client WHERE sys_group.client_id = client.client_id and sys_group.groupid = ? order by client.contact_name", $client_group_id);
 			$client = $app->functions->htmlentities($client);
 
 			// Set the mailserver to the default server of the client
@@ -112,7 +112,7 @@ class page_action extends tform_actions {
 
 			if ($settings['use_domain_module'] != 'y') {
 				// Fill the client select field
-				$sql = "SELECT sys_group.groupid, sys_group.name, CONCAT(IF(client.company_name != '', CONCAT(client.company_name, ' :: '), ''), client.contact_name, ' (', client.username, IF(client.customer_no != '', CONCAT(', ', client.customer_no), ''), ')') as contactname FROM sys_group, client WHERE sys_group.client_id = client.client_id AND client.parent_client_id = ? ORDER BY client.company_name, client.contact_name, sys_group.name";
+				$sql = "SELECT sys_group.groupid, sys_group.name, " . $app->functions->get_client_sql_concat_query() . " as contactname FROM sys_group, client WHERE sys_group.client_id = client.client_id AND client.parent_client_id = ? ORDER BY client.company_name, client.contact_name, sys_group.name";
 				$clients = $app->db->queryAllRecords($sql, $client['client_id']);
 				$clients = $app->functions->htmlentities($clients);
 				$tmp = $app->db->queryOneRecord("SELECT groupid FROM sys_group WHERE client_id = ?", $client['client_id']);

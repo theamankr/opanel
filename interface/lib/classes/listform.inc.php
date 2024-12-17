@@ -94,6 +94,7 @@ class listform {
 			//$table_idx = $this->formDef['db_table_idx'];
 			//$querystring = str_replace("{RECORDID}",$record[$table_idx],$querystring);
 			$app->uses('tform');
+			$querystring = str_replace("{CLIENTNAMESQL}", $app->functions->get_client_sql_concat_query(), $querystring);
 			$querystring = str_replace("{AUTHSQL}", $app->tform->getAuthSQL('r'), $querystring);
 			$querystring = str_replace("{AUTHSQL-A}", $app->tform->getAuthSQL('r', 'a'), $querystring);
 			$querystring = str_replace("{AUTHSQL-B}", $app->tform->getAuthSQL('r', 'b'), $querystring);

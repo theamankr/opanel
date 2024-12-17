@@ -659,7 +659,7 @@ class functions {
 		unset($entries);
 		unset($to_disable);
     }
-    // Function to cancel disable/enable a client
+	// Function to cancel disable/enable a client
 	public function func_client_cancel($client_id,$cancel) {
 		global $app;
 		if ($cancel == 'y') {
@@ -674,22 +674,26 @@ class functions {
 		return $result;
 	}
 
-    /**
-     * Lookup a client's group + all groups he is reselling.
-     *
-     * @return string Comma separated list of groupid's
-     */
-    function clientid_to_groups_list($client_id) {
-      global $app;
+	// SQL query snippit for the client's company and username.
+	function get_client_sql_concat_query() {
+		return "CONCAT(IF(client.company_name != '', CONCAT(client.company_name, ' :: '), ''), client.contact_name, ' (', client.username, IF(client.customer_no != '', CONCAT(', ', client.customer_no), ''), ')')";
+	}
 
-      if ($client_id != null) {
-        // Get the clients groupid, and in case it's a reseller the groupid's of its clients.
-        $group = $app->db->queryOneRecord("SELECT GROUP_CONCAT(groupid) AS `groups` FROM `sys_group` WHERE client_id IN (SELECT client_id FROM `client` WHERE client_id=? OR parent_client_id=?)", $client_id, $client_id);
-        return $group['groups'];
-      }
-      return null;
-    }
+	/**
+	 * Lookup a client's group + all groups he is reselling.
+	 *
+	 * @return string Comma separated list of groupid's
+	 */
+	function clientid_to_groups_list($client_id) {
+		global $app;
 
+		if ($client_id != null) {
+			// Get the clients groupid, and incase it's a reseller the groupid's of it's clients.
+			$group = $app->db->queryOneRecord("SELECT GROUP_CONCAT(groupid) AS groups FROM `sys_group` WHERE client_id IN (SELECT client_id FROM `client` WHERE client_id=? OR parent_client_id=?)", $client_id, $client_id);
+			return $group['groups'];
+		}
+		return null;
+	}
 }
 
 ?>
