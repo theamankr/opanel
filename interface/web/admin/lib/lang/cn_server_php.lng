@@ -17,4 +17,5 @@ $wb['php_fpm_socket_dir_txt'] = 'PHP-FPM套接字目录';
 $wb['active_txt'] = '激活';
 $wb['php_in_use_error'] = '此PHP版本正在使用中。';
 $wb['php_name_in_use_error'] = '名称无法更改。';
+$wb['php_usage_list_txt'] = 'Currently used for';
 ?>

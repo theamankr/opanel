@@ -265,4 +265,10 @@ $form["tabs"]['php_sort'] = array (
 		),
 	)
 );
+$form["tabs"]['usage'] = array(
+	'title' => "Usage",
+	'width' => 80,
+	'template' => "templates/server_php_usage_edit.htm",
+	'fields'  => array(),
+);
 ?>
