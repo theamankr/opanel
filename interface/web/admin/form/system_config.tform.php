@@ -148,6 +148,40 @@ $form["tabs"]['sites'] = array (
 			'width'  => '30',
 			'maxlength' => '255'
 		),
+		'acme_dns_user' => array (
+			'datatype' => 'VARCHAR',
+			'formtype' => 'TEXT',
+			'default' => '',
+			'value'  => '',
+			'width'  => '30',
+			'maxlength' => '255'
+		),
+		'acme_dns_password' => array (
+			'datatype' => 'VARCHAR',
+			'formtype' => 'TEXT',
+			'default' => '',
+			'value'  => '',
+			'width'  => '30',
+			'maxlength' => '255'
+		),
+		'acme_dns_api' => array (
+			'datatype' => 'VARCHAR',
+			'formtype' => 'TEXT',
+			'validators' => array ( 0 => array ( 'type' => 'REGEX',
+			'regex' => '/^[0-9a-zA-Z\:\/\-\.\_\[\]\?\=\&]{0,255}$/',
+					'errmsg'=> 'acme_dns_api_url_error_regex'),
+			),
+			'default' => '',
+			'value'  => '',
+			'width'  => '30',
+			'maxlength' => '255'
+		),
+		'acme_dns_api_insecure' => array (
+			'datatype' => 'VARCHAR',
+			'formtype' => 'CHECKBOX',
+			'default' => 'y',
+			'value'  => array(0 => 'n', 1 => 'y')
+		),
 		'client_protection' => array (
 			'datatype' => 'VARCHAR',
 			'formtype' => 'CHECKBOX',

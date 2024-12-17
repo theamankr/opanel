@@ -38,6 +38,10 @@ reseller_can_use_options=n
 web_php_options=no,php-fpm
 show_aps_menu=n
 client_protection=y
+acme_dns_user=
+acme_dns_password=
+acme_dns_api=
+acme_dns_api_insecure=n
 ssh_authentication=
 le_caa_autocreate_options=y
 

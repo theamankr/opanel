@@ -25,13 +25,32 @@
             </div>
             <div class="form-group">
                 <label for="webftp_url" class="col-sm-3 control-label">{tmpl_var name='webftp_url_txt'}</label>
-                <div class="col-sm-9"><input type="text" name="webftp_url" id="webftp_url" value="{tmpl_var name='webftp_url'}" class="form-control" /></div></div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{tmpl_var name='client_protection_txt'}</label>
-                    <div class="col-sm-9">
-                        {tmpl_var name='client_protection'}
-                    </div>
+                <div class="col-sm-9"><input type="text" name="webftp_url" id="webftp_url" value="{tmpl_var name='webftp_url'}" class="form-control" /></div>
+            </div>
+            <div class="form-group">
+                <label for="acme_dns_user" class="col-sm-3 control-label">{tmpl_var name='acme_dns_user_txt'}</label>
+                <div class="col-sm-9"><input type="text" name="acme_dns_user" id="acme_dns_user" value="{tmpl_var name='acme_dns_user'}" class="form-control" /></div>
+            </div>
+            <div class="form-group">
+                <label for="acme_dns_password" class="col-sm-3 control-label">{tmpl_var name='acme_dns_password_txt'}</label>
+                <div class="col-sm-9"><input type="password" name="acme_dns_password" id="acme_dns_password" value="" class="form-control" /></div>
+            </div>
+            <div class="form-group">
+                <label for="acme_dns_api" class="col-sm-3 control-label">{tmpl_var name='acme_dns_api_txt'}</label>
+                <div class="col-sm-9"><input type="text" name="acme_dns_api" id="acme_dns_api" value="{tmpl_var name='acme_dns_api'}" class="form-control" /></div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">{tmpl_var name='acme_dns_api_insecure_txt'}</label>
+                <div class="col-sm-9">
+                    {tmpl_var name='acme_dns_api_insecure'}
                 </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">{tmpl_var name='client_protection_txt'}</label>
+                <div class="col-sm-9">
+                    {tmpl_var name='client_protection'}
+                </div>
+            </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label">{tmpl_var name='vhost_subdomains_txt'}</label>
                 <div class="col-sm-9">
