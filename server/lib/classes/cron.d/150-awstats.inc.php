@@ -79,7 +79,7 @@ class cronjob_awstats extends cronjob {
 			}
 			$web_folder = (($rec['type'] == 'vhostsubdomain' || $rec['type'] == 'vhostalias') ? $rec['web_folder'] : 'web');
 			$domain = $rec['domain'];
-			$statsdir = $rec['document_root'].'/'.$web_folder.'/stats';
+			$statsdir = $rec['document_root'].'/stats';
 			$awstats_pl = $web_config['awstats_pl'];
 			$awstats_buildstaticpages_pl = $web_config['awstats_buildstaticpages_pl'];
 
@@ -170,13 +170,13 @@ class cronjob_awstats extends cronjob {
 
 			if($awstats_pl != '' && $awstats_buildstaticpages_pl != '' && fileowner($awstats_pl) == 0 && fileowner($awstats_buildstaticpages_pl) == 0) {
 				exec($command);
-				if(is_file($rec['document_root'].'/'.$web_folder.'/stats/index.html')) unlink($rec['document_root'].'/'.$web_folder.'/stats/index.html');
-				rename($rec['document_root'].'/'.$web_folder.'/stats/awstats.'.$domain.'.html', $rec['document_root'].'/'.$web_folder.'/stats/awsindex.html');
-				if(!is_file($rec['document_root']."/".$web_folder."/stats/index.php")) {
+				if(is_file($rec['document_root'].'/stats/index.html')) unlink($rec['document_root'].'/stats/index.html');
+				rename($rec['document_root'].'/stats/awstats.'.$domain.'.html', $rec['document_root'].'/stats/awsindex.html');
+				if(!is_file($rec['document_root']."/stats/index.php")) {
 					if(file_exists("/usr/local/ispconfig/server/conf-custom/awstats_index.php.master")) {
-						copy("/usr/local/ispconfig/server/conf-custom/awstats_index.php.master", $rec['document_root']."/".$web_folder."/stats/index.php");
+						copy("/usr/local/ispconfig/server/conf-custom/awstats_index.php.master", $rec['document_root']."/stats/index.php");
 					} else {
-						copy("/usr/local/ispconfig/server/conf/awstats_index.php.master", $rec['document_root']."/".$web_folder."/stats/index.php");
+						copy("/usr/local/ispconfig/server/conf/awstats_index.php.master", $rec['document_root']."/stats/index.php");
 					}
 				}
 
@@ -185,9 +185,9 @@ class cronjob_awstats extends cronjob {
 				$app->log("No awstats statistics created. Either $awstats_pl or $awstats_buildstaticpages_pl is not owned by root user.", LOGLEVEL_WARN);
 			}
 
-			if(is_file($rec['document_root']."/".$web_folder."/stats/index.php")) {
-				chown($rec['document_root']."/".$web_folder."/stats/index.php", $rec['system_user']);
-				chgrp($rec['document_root']."/".$web_folder."/stats/index.php", $rec['system_group']);
+			if(is_file($rec['document_root']."/stats/index.php")) {
+				chown($rec['document_root']."/stats/index.php", $rec['system_user']);
+				chgrp($rec['document_root']."/stats/index.php", $rec['system_group']);
 			}
 
 			$app->system->exec_safe('chown -R ?:? ?', $username, $groupname, $statsdir);

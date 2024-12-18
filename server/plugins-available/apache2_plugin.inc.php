@@ -712,7 +712,7 @@ class apache2_plugin {
 			}
 		}
 		if(!is_dir($data['new']['document_root'].'/' . $web_folder . '/error') and $data['new']['errordocs']) $app->system->mkdirpath($data['new']['document_root'].'/' . $web_folder . '/error');
-		if($data['new']['stats_type'] != '' && !is_dir($data['new']['document_root'].'/' . $web_folder . '/stats')) $app->system->mkdirpath($data['new']['document_root'].'/' . $web_folder . '/stats');
+		if($data['new']['stats_type'] != '' && !is_dir($data['new']['document_root'] . '/stats')) $app->system->mkdirpath($data['new']['document_root'].'/' . $web_folder . '/stats');
 		if(!is_dir($data['new']['document_root'].'/ssl')) $app->system->mkdirpath($data['new']['document_root'].'/ssl');
 		if(!is_dir($data['new']['document_root'].'/cgi-bin')) $app->system->mkdirpath($data['new']['document_root'].'/cgi-bin');
 		if(!is_dir($data['new']['document_root'].'/tmp')) $app->system->mkdirpath($data['new']['document_root'].'/tmp', 0770);
@@ -1076,8 +1076,8 @@ class apache2_plugin {
 				$app->system->chown($data['new']['document_root'].'/web/error', $username);
 				$app->system->chgrp($data['new']['document_root'].'/web/error', $groupname);
 				if($data['new']['stats_type'] != '') {
-					$app->system->chown($data['new']['document_root'].'/web/stats', $username);
-					$app->system->chgrp($data['new']['document_root'].'/web/stats', $groupname);
+					$app->system->chown($data['new']['document_root'].'/stats', $username);
+					$app->system->chgrp($data['new']['document_root'].'/stats', $groupname);
 				}
 				$app->system->chown($data['new']['document_root'].'/webdav', $username);
 				$app->system->chgrp($data['new']['document_root'].'/webdav', $groupname);
@@ -1119,8 +1119,8 @@ class apache2_plugin {
 				$app->system->chown($data['new']['document_root'].'/web/error', $username);
 				$app->system->chgrp($data['new']['document_root'].'/web/error', $groupname);
 				if($data['new']['stats_type'] != '') {
-					$app->system->chown($data['new']['document_root'].'/web/stats', $username);
-					$app->system->chgrp($data['new']['document_root'].'/web/stats', $groupname);
+					$app->system->chown($data['new']['document_root'].'/stats', $username);
+					$app->system->chgrp($data['new']['document_root'].'/stats', $groupname);
 				}
 				$app->system->chown($data['new']['document_root'].'/webdav', $username);
 				$app->system->chgrp($data['new']['document_root'].'/webdav', $groupname);
@@ -1135,8 +1135,8 @@ class apache2_plugin {
 				$app->system->chown($data['new']['document_root'].'/' . $web_folder . '/error', $username);
 				$app->system->chgrp($data['new']['document_root'].'/' . $web_folder . '/error', $groupname);
 				if($data['new']['stats_type'] != '') {
-					$app->system->chown($data['new']['document_root'].'/' . $web_folder . '/stats', $username);
-					$app->system->chgrp($data['new']['document_root'].'/' . $web_folder . '/stats', $groupname);
+					$app->system->chown($data['new']['document_root'] . '/stats', $username);
+					$app->system->chgrp($data['new']['document_root'] . '/stats', $groupname);
 				}
 			} else {
 				$app->system->chmod($data['new']['document_root'].'/' . $web_folder, 0755);
@@ -1145,8 +1145,8 @@ class apache2_plugin {
 				$app->system->chown($data['new']['document_root'].'/' . $web_folder . '/error', $username);
 				$app->system->chgrp($data['new']['document_root'].'/' . $web_folder . '/error', $groupname);
 				if($data['new']['stats_type'] != '') {
-					$app->system->chown($data['new']['document_root'].'/' . $web_folder . '/stats', $username);
-					$app->system->chgrp($data['new']['document_root'].'/' . $web_folder . '/stats', $groupname);
+					$app->system->chown($data['new']['document_root'] . '/stats', $username);
+					$app->system->chgrp($data['new']['document_root'] . '/stats', $groupname);
 				}
 			}
 		}
@@ -1256,6 +1256,7 @@ class apache2_plugin {
 		$vhost_data['custom_php_ini_dir'] = $custom_php_ini_dir;
 		$vhost_data['logging'] = $web_config['logging'];
 		$vhost_data['disable_symlinknotowner '] = $data['new']['disable_symlinknotowner'];
+		$vhost_data['web_stats_root'] = $data['new']['document_root'].'/stats';
 
 		// Custom Apache directives
 		if(intval($data['new']['directive_snippets_id']) > 0){
@@ -1953,19 +1954,20 @@ class apache2_plugin {
 		//if(!is_file($data['new']['document_root'].'/' . $web_folder . '/stats/.htaccess') or $data['old']['document_root'] != $data['new']['document_root']) {
 
 		if($data['new']['stats_type'] != '') {
-			if(!is_dir($data['new']['document_root'].'/' . $web_folder . '/stats')) $app->system->mkdir($data['new']['document_root'].'/' . $web_folder . '/stats');
-			$ht_file = "AuthType Basic\nAuthName \"Members Only\"\nAuthUserFile ".$data['new']['document_root']."/".$web_folder."/stats/.htpasswd_stats\nrequire valid-user\nDirectoryIndex index.html index.php\nHeader set Content-Security-Policy \"default-src * 'self' 'unsafe-inline' 'unsafe-eval' data:;\"\n<Files \"goaindex.html\">\nAddDefaultCharset UTF-8\n</Files>\n";
-			$app->system->file_put_contents($data['new']['document_root'].'/' . $web_folder . '/stats/.htaccess', $ht_file);
-			$app->system->chmod($data['new']['document_root'].'/' . $web_folder . '/stats/.htaccess', 0755);
+#			$tpl->setVar('stats_type', $data['new']['stats_type']);
+			if(!is_dir($data['new']['document_root'] . '/stats')) $app->system->mkdir($data['new']['document_root'] . '/stats');
+			$ht_file = "AuthType Basic\nAuthName \"Members Only\"\nAuthUserFile ".$data['new']['document_root']."/stats/.htpasswd_stats\nrequire valid-user\nDirectoryIndex index.html index.php\nHeader set Content-Security-Policy \"default-src * 'self' 'unsafe-inline' 'unsafe-eval' data:;\"\n<Files \"goaindex.html\">\nAddDefaultCharset UTF-8\n</Files>\n";
+			$app->system->file_put_contents($data['new']['document_root'] . '/stats/.htaccess', $ht_file);
+			$app->system->chmod($data['new']['document_root'] . '/stats/.htaccess', 0755);
 			unset($ht_file);
 
-			if(!is_file($data['new']['document_root'].'/'.$web_folder.'/stats/.htpasswd_stats') || $data['new']['stats_password'] != $data['old']['stats_password']) {
+			if(!is_file($data['new']['document_root'] . '/stats/.htpasswd_stats') || $data['new']['stats_password'] != $data['old']['stats_password']) {
 				if(isset($data['new']['stats_password']) && trim($data['new']['stats_password']) != '') {
 					$htp_file = 'admin:'.trim($data['new']['stats_password']);
 					$app->system->web_folder_protection($data['new']['document_root'], false);
-					$app->system->file_put_contents($data['new']['document_root'].'/'.$web_folder.'/stats/.htpasswd_stats', $htp_file);
+					$app->system->file_put_contents($data['new']['document_root'] . '/stats/.htpasswd_stats', $htp_file);
 					$app->system->web_folder_protection($data['new']['document_root'], true);
-					$app->system->chmod($data['new']['document_root'].'/'.$web_folder.'/stats/.htpasswd_stats', 0755);
+					$app->system->chmod($data['new']['document_root'] . '/stats/.htpasswd_stats', 0755);
 					unset($htp_file);
 				}
 			}
@@ -3067,7 +3069,11 @@ class apache2_plugin {
 		if($data['new']['type'] == 'vhost') $web_folder = 'web';
 		$awstats_conf_dir = $web_config['awstats_conf_dir'];
 
-		if(!is_dir($data['new']['document_root']."/" . $web_folder . "/stats/")) mkdir($data['new']['document_root']."/" . $web_folder . "/stats");
+		if(!is_dir($data['new']['document_root'] . "/stats/"))	{
+			$app->system->web_folder_protection($data['new']['document_root'], false);
+			mkdir($data['new']['document_root']. "/stats");
+			$app->system->web_folder_protection($data['new']['document_root'], true);
+		}
 		if(!@is_file($awstats_conf_dir.'/awstats.'.$data['new']['domain'].'.conf') || ($data['old']['domain'] != '' && $data['new']['domain'] != $data['old']['domain'])) {
 			if ( @is_file($awstats_conf_dir.'/awstats.'.$data['old']['domain'].'.conf') ) {
 				$app->system->unlink($awstats_conf_dir.'/awstats.'.$data['old']['domain'].'.conf');
@@ -3092,11 +3098,11 @@ class apache2_plugin {
 			}
 		}
 
-		if(is_file($data['new']['document_root']."/" . $web_folder . "/stats/index.html")) $app->system->unlink($data['new']['document_root']."/" . $web_folder . "/stats/index.html");
+		if(is_file($data['new']['document_root']. "/stats/index.html")) $app->system->unlink($data['new']['document_root']. "/stats/index.html");
 		if(file_exists("/usr/local/ispconfig/server/conf-custom/awstats_index.php.master")) {
-			$app->system->copy("/usr/local/ispconfig/server/conf-custom/awstats_index.php.master", $data['new']['document_root']."/" . $web_folder . "/stats/index.php");
+			$app->system->copy("/usr/local/ispconfig/server/conf-custom/awstats_index.php.master", $data['new']['document_root']. "/stats/index.php");
 		} else {
-			$app->system->copy("/usr/local/ispconfig/server/conf/awstats_index.php.master", $data['new']['document_root']."/" . $web_folder . "/stats/index.php");
+			$app->system->copy("/usr/local/ispconfig/server/conf/awstats_index.php.master", $data['new']['document_root'] . "/stats/index.php");
 		}
 	}
 
@@ -3173,11 +3179,11 @@ class apache2_plugin {
                         $app->log('Created GoAccess config file: '.$goaccess_conf, LOGLEVEL_DEBUG);
                 }
 
-                if(is_file($data['new']['document_root']."/" . $web_folder . "/stats/index.html")) $app->system->unlink($data['new']['document_root']."/" . $web_folder . "/stats/index.html");
+                if(is_file($data['new']['document_root'] . "/stats/index.html")) $app->system->unlink($data['new']['document_root'] . "/stats/index.html");
                 if(file_exists("/usr/local/ispconfig/server/conf-custom/goaccess_index.php.master")) {
-                        $app->system->copy("/usr/local/ispconfig/server/conf-custom/goaccess_index.php.master", $data['new']['document_root']."/" . $web_folder . "/stats/index.php");
+                        $app->system->copy("/usr/local/ispconfig/server/conf-custom/goaccess_index.php.master", $data['new']['document_root'] . "/stats/index.php");
                 } else {
-                        $app->system->copy("/usr/local/ispconfig/server/conf/goaccess_index.php.master", $data['new']['document_root']."/" . $web_folder . "/stats/index.php");
+                        $app->system->copy("/usr/local/ispconfig/server/conf/goaccess_index.php.master", $data['new']['document_root'] . "/stats/index.php");
                 }
         }
 

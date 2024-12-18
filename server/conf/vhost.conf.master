@@ -66,6 +66,10 @@
 		ErrorLog /var/log/ispconfig/httpd/<tmpl_var name='domain'>/error.log
 </tmpl_if>
 
+<tmpl_if name='stats_type'>
+		Alias /stats/ <tmpl_var name='web_stats_root'>/
+</tmpl_if>
+
 <tmpl_if name='errordocs'>
 		Alias /error/ "<tmpl_var name='web_document_root_www'>/error/"
 		ErrorDocument 400 /error/400.html
@@ -137,6 +141,40 @@
 </tmpl_if>
 		</Directory>
 		<Directory {tmpl_var name='web_document_root'}>
+				# Clear PHP settings of this website
+				<FilesMatch ".+\.ph(p[345]?|t|tml)$">
+						SetHandler None
+				</FilesMatch>
+				<tmpl_if name='disable_symlinknotowner' op='==' value='n'>
+				Options +SymlinksIfOwnerMatch
+				</tmpl_if>
+				AllowOverride <tmpl_var name='allow_override'>
+				<tmpl_if name='apache_version' op='>' value='2.2' format='version'>
+				Require all granted
+				<tmpl_else>
+				Order allow,deny
+				Allow from all
+				</tmpl_if>
+<tmpl_if name='ssi' op='==' value='y'>
+
+				# ssi enabled
+				AddType text/html .shtml
+				AddOutputFilter INCLUDES .shtml
+				Options +Includes
+</tmpl_if>
+<tmpl_if name='php' op='==' value='no'>
+				<Files ~ '.php[s3-6]{0,1}$'>
+					<tmpl_if name='apache_version' op='>' value='2.2' format='version'>
+					Require all denied
+					<tmpl_else>
+					Order allow,deny
+					Deny from all
+					Allow from none
+					</tmpl_if>
+				</Files>
+</tmpl_if>
+		</Directory>
+		<Directory {tmpl_var name='web_stats_root'}>
 				# Clear PHP settings of this website
 				<FilesMatch ".+\.ph(p[345]?|t|tml)$">
 						SetHandler None
@@ -437,6 +475,13 @@
 				</FilesMatch>
 			</Directory>
 			<Directory {tmpl_var name='web_document_root'}>
+				<FilesMatch "\.php[345]?$">
+					<If "-f '%{REQUEST_FILENAME}'">
+						SetHandler "proxy:unix:<tmpl_var name='fpm_socket'>|fcgi://localhost"
+					</If>
+				</FilesMatch>
+			</Directory>
+			<Directory {tmpl_var name='web_stats_root'}>
 				<FilesMatch "\.php[345]?$">
 					<If "-f '%{REQUEST_FILENAME}'">
 						SetHandler "proxy:unix:<tmpl_var name='fpm_socket'>|fcgi://localhost"
