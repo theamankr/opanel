@@ -80,6 +80,7 @@ $wb['ssh_authentication_password_key'] = 'Password & Key';
 $wb['ssh_authentication_password'] = 'Password';
 $wb['ssh_authentication_key'] = 'Key';
 $wb['default_mailserver_txt'] = 'Varsayılan E-posta Sunucusu';
+$wb['default_imap_prefix_txt'] = 'Default IMAP prefix';
 $wb['default_webserver_txt'] = 'Varsayılan Web Sunucusu';
 $wb['default_dnsserver_txt'] = 'Varsayılan Birincil DNS Sunucusu';
 $wb['default_slave_dnsserver_txt'] = 'Varsayılan İkincil DNS Sunucusu';

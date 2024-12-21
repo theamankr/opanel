@@ -85,6 +85,7 @@ $wb['custom_login_text_txt'] = 'Custom Text on Login-Page';
 $wb['custom_login_link_txt'] = 'Custom Link on Login-Page';
 $wb['login_link_error_regex'] = 'Invalid Link for Custom Login';
 $wb['default_mailserver_txt'] = 'Default Mailserver';
+$wb['default_imap_prefix_txt'] = 'Default IMAP prefix';
 $wb['default_webserver_txt'] = 'Default Webserver';
 $wb['default_dnsserver_txt'] = 'Default DNS Server';
 $wb['default_slave_dnsserver_txt'] = 'Default Secondary DNS Server';

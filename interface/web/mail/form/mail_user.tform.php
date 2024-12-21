@@ -231,7 +231,7 @@ if($app->auth->is_admin()) {
 						1 => array( 'event' => 'SAVE',
 						'type' => 'STRIPNL')
 				),
-				'default' => '',
+				'default' => $global_config['mail']['default_imap_prefix'] ?? '',
 				'value'  => '',
 				'width'  => '30',
 				'maxlength' => '255',

@@ -85,6 +85,7 @@ $wb['custom_login_text_txt'] = 'Пользовательский текст на
 $wb['custom_login_link_txt'] = 'Пользовательская ссылка на страницу входа';
 $wb['login_link_error_regex'] = 'Некорректная ссылка для пользовательского входа';
 $wb['default_mailserver_txt'] = 'Почтовый сервер по умолчанию';
+$wb['default_imap_prefix_txt'] = 'Default IMAP prefix';
 $wb['default_webserver_txt'] = 'Web-сервер по умолчанию';
 $wb['default_dnsserver_txt'] = 'DNS-сервер по умолчанию';
 $wb['default_slave_dnsserver_txt'] = 'Вторичный DNS-сервер по умолчанию';

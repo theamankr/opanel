@@ -80,6 +80,7 @@ $wb['vhost_aliasdomains_txt'] = 'Crea dominio alias come sito web';
 $wb['vhost_aliasdomains_note_txt'] = 'Non puoi disabilitare questo fintanto che un dominio alias vhost è presente nel sistema!';
 $wb['backups_include_into_web_quota_txt'] = 'Includere i file di backup nella quota web.';
 $wb['default_mailserver_txt'] = 'Default Mailserver';
+$wb['default_imap_prefix_txt'] = 'Default IMAP prefix';
 $wb['default_webserver_txt'] = 'Default Webserver';
 $wb['default_dnsserver_txt'] = 'Default DNS Server';
 $wb['default_slave_dnsserver_txt'] = 'Default Secondary DNS Server';

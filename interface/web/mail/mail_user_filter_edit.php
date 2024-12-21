@@ -81,6 +81,11 @@ class page_action extends tform_actions {
 		// Remove leading dots
 		if(substr($this->dataRecord['target'], 0, 1) == '.') $this->dataRecord['target'] = substr($this->dataRecord['target'], 1);
 
+		// Add IMAP prefix if not already present.
+		if ($this->dataRecord["action"] == 'move' && !empty($mailuser['imap_prefix']) && strpos($this->dataRecord['target'], $mailuser['imap_prefix']) !== 0) {
+			$this->dataRecord['target'] = rtrim($mailuser['imap_prefix'], '.') . '.' . $this->dataRecord['target'];
+		}
+
 		// Check the client limits, if user is not the admin
 		if($_SESSION["s"]["user"]["typ"] != 'admin') { // if user is not admin
 			// Get the limits of the client

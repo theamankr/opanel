@@ -81,6 +81,7 @@ $wb['ssh_authentication_password_key'] = '密码和密钥';
 $wb['ssh_authentication_password'] = '密码';
 $wb['ssh_authentication_key'] = '密钥';
 $wb['default_mailserver_txt'] = '默认邮件服务器';
+$wb['default_imap_prefix_txt'] = 'Default IMAP prefix';
 $wb['default_webserver_txt'] = '默认Web服务器';
 $wb['default_dnsserver_txt'] = '默认DNS服务器';
 $wb['default_slave_dnsserver_txt'] = '默认次要DNS服务器';

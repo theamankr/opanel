@@ -80,6 +80,7 @@ $wb['vhost_aliasdomains_txt'] = 'Create aliasdomains as web site';
 $wb['vhost_aliasdomains_note_txt'] = 'You cannot disable this as long as vhost aliasdomains exist in the system!';
 $wb['backups_include_into_web_quota_txt'] = 'Include backup files into web quota.';
 $wb['default_mailserver_txt'] = 'Výchozí E-mailový server';
+$wb['default_imap_prefix_txt'] = 'Default IMAP prefix';
 $wb['default_webserver_txt'] = 'Výchozí webový server';
 $wb['default_dnsserver_txt'] = 'Výchozí DNS server';
 $wb['default_slave_dnsserver_txt'] = 'Výchozí sekundární DNS server';

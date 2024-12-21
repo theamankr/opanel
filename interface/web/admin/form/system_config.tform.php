@@ -457,6 +457,14 @@ $form["tabs"]['mail'] = array (
 			'value'  => '',
 			'name'  => 'default_mailserver'
 		),
+		'default_imap_prefix' => array(
+			'datatype' => 'VARCHAR',
+			'formtype' => 'TEXT',
+			'default' => '',
+			'value' => '',
+			'width' => '20',
+			'maxlength' => '255'
+		),
 		//#################################
 		// END Datatable fields
 		//#################################

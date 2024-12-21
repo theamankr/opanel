@@ -80,6 +80,7 @@ $wb['ssh_authentication_password_key'] = 'Senha e Chave';
 $wb['ssh_authentication_password'] = 'Senha';
 $wb['ssh_authentication_key'] = 'Chave';
 $wb['default_mailserver_txt'] = 'Servidor de emails padrão';
+$wb['default_imap_prefix_txt'] = 'Default IMAP prefix';
 $wb['default_webserver_txt'] = 'Servidor Web padrão';
 $wb['default_dnsserver_txt'] = 'Servidor DNS padrão';
 $wb['default_slave_dnsserver_txt'] = 'Servidor DNS secundário padrão';
