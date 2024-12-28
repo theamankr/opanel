@@ -76,13 +76,13 @@
 		<tmpl_if name="IP_VISIBLE">
 			<div class="form-group">
 				<label for="ip" class="col-sm-3 control-label">{tmpl_var name='ip_txt'}</label>
-				<div class="col-sm-9"><input type="text" name="ip" id="ip" value="{tmpl_var name='ip'}" class="form-control" /></div>
+				<div class="col-sm-9"><input type="search" name="ip" id="ip" value="{tmpl_var name='ip'}" class="form-control" autocomplete="off" /></div>
 			</div>
 		</tmpl_if>
 		<tmpl_if name="IPV6_VISIBLE">
 			<div class="form-group">
 				<label for="ipv6" class="col-sm-3 control-label">{tmpl_var name='ipv6_txt'}</label>
-				<div class="col-sm-9"><input type="text" name="ipv6" id="ipv6" value="{tmpl_var name='ipv6'}" class="form-control" /></div>
+				<div class="col-sm-9"><input type="search" name="ipv6" id="ipv6" value="{tmpl_var name='ipv6'}" class="form-control" autocomplete="off" /></div>
 			</div>
 		</tmpl_if>
 		<tmpl_if name="NS1_VISIBLE">
@@ -129,11 +129,10 @@
 </div>
 <script language="JavaScript" type="text/javascript">
 	jQuery('#ip').ispconfigSearch({
-		dataSrc: '/dns/ajax_get_json.php?type=get_ipv4',
+		dataSrc: '/dns/ajax_get_json.php?type=get_ipv4&context=dns_wizard_ip',
 		resultsLimit: '$ <tmpl_var name="globalsearch_resultslimit_of_txt"> % <tmpl_var name="globalsearch_resultslimit_results_txt">',
 		ResultsTextPrefix: '<tmpl_var name="globalsearch_suggestions_text_txt">',
-		noResultsText: '<tmpl_var name="globalsearch_noresults_text_txt">',
-		noResultsLimit: '<tmpl_var name="globalsearch_noresults_limit_txt">',
+		displayNoResults: false,
 		minChars: 0,
 		cssPrefix: 'df-',
 		fillSearchField: true,
@@ -144,11 +143,10 @@
 </script>
 <script language="JavaScript" type="text/javascript">
 	jQuery('#ipv6').ispconfigSearch({
-		dataSrc: '/dns/ajax_get_json.php?type=get_ipv6',
+		dataSrc: '/dns/ajax_get_json.php?type=get_ipv6&context=dns_wizard_ipv6',
 		resultsLimit: '$ <tmpl_var name="globalsearch_resultslimit_of_txt"> % <tmpl_var name="globalsearch_resultslimit_results_txt">',
 		ResultsTextPrefix: '<tmpl_var name="globalsearch_suggestions_text_txt">',
-		noResultsText: '<tmpl_var name="globalsearch_noresults_text_txt">',
-		noResultsLimit: '<tmpl_var name="globalsearch_noresults_limit_txt">',
+		displayNoResults: false,
 		minChars: 0,
 		cssPrefix: 'df-',
 		fillSearchField: true,

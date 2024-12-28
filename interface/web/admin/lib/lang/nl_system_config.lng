@@ -1,4 +1,3 @@
-<?php
 $wb['system_config_title'] = 'System Config';
 $wb['system_config_desc_txt'] = '';
 $wb['dashboard_atom_url_admin_txt'] = 'Dashboard atom feed URL (admin)';
@@ -99,6 +98,9 @@ $wb['ca_iodef_txt'] = 'iodef';
 $wb['active_txt'] = 'Aktive';
 $wb['btn_save_txt'] = 'Save';
 $wb['btn_cancel_txt'] = 'Cancel';
+$wb['use_ipsuggestions_txt'] = 'IP adres suggesties inschakelen';
+$wb['use_ipsuggestions_descr_txt'] = 'Toont een dropdown box met een lijst van IP adressen voor IPv4 en IPv6 adressen.';
+$wb['ipsuggestions_max_txt'] = 'Max aantal IP suggesties';
 $wb['web_php_options_txt'] = 'PHP Handler (Apache only)';
 $wb['client_protection_txt'] = 'Client protection';
 $wb['show_support_messages_txt'] = 'Show message function in help module';

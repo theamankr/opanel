@@ -43,6 +43,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			noResultsLimit: '0 results',
 			searchFieldWatermark: 'Search',
 			displayEmptyCategories: false,
+			displayNoResults: true,
 			runJS: true
 		};
 		
@@ -129,16 +130,18 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 								}
 
 								//resultBox.html(output).css({'position' : 'absolute', 'top' : searchField.position().top+searchField.outerHeight(), 'right' : '0'}).fadeIn();
-								if(settings.resultBoxPosition == 'n'){
-									resultBox.html(output).css({'position' : 'absolute', 'top' : searchField.position().top-resultBox.outerHeight(), 'left' : searchField.position().left+searchField.outerWidth()-resultBox.outerWidth()}).fadeIn();
-								} else if(settings.resultBoxPosition == 'e'){
-									resultBox.html(output).css({'position' : 'absolute', 'top' : searchField.position().top, 'left' : searchField.position().left+searchField.outerWidth()}).fadeIn();
-								} else if(settings.resultBoxPosition == 's'){
-									resultBox.html(output).css({'position' : 'absolute', 'top' : searchField.position().top+searchField.outerHeight(), 'left' : searchField.position().left+searchField.outerWidth()-resultBox.outerWidth()}).fadeIn();
-								} else if(settings.resultBoxPosition == 'w'){
-									resultBox.html(output).css({'position' : 'absolute', 'top' : searchField.position().top, 'left' : searchField.position().left-resultBox.outerWidth()}).fadeIn();
-								} else {
-									resultBox.html(output).fadeIn();
+								if (settings.displayNoResults){
+									if(settings.resultBoxPosition == 'n'){
+										resultBox.html(output).css({'position' : 'absolute', 'top' : searchField.position().top-resultBox.outerHeight(), 'left' : searchField.position().left+searchField.outerWidth()-resultBox.outerWidth()}).fadeIn();
+									} else if(settings.resultBoxPosition == 'e'){
+										resultBox.html(output).css({'position' : 'absolute', 'top' : searchField.position().top, 'left' : searchField.position().left+searchField.outerWidth()}).fadeIn();
+									} else if(settings.resultBoxPosition == 's'){
+										resultBox.html(output).css({'position' : 'absolute', 'top' : searchField.position().top+searchField.outerHeight(), 'left' : searchField.position().left+searchField.outerWidth()-resultBox.outerWidth()}).fadeIn();
+									} else if(settings.resultBoxPosition == 'w'){
+										resultBox.html(output).css({'position' : 'absolute', 'top' : searchField.position().top, 'left' : searchField.position().left-resultBox.outerWidth()}).fadeIn();
+									} else {
+										resultBox.html(output).fadeIn();
+									}
 								}
 
 								searchField.removeClass(settings.cssPrefix+'loading');

@@ -855,3 +855,6 @@ max-width: 1260px; }
 		text-overflow: ellipsis ;
 		overflow-x: hidden;
 	}
+	.ip_suggestion_server {
+		font-weight: bold;
+	}

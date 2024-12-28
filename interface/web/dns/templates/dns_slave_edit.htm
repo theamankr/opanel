@@ -48,13 +48,13 @@
             <div class="form-group">
                 <label for="ns" class="col-sm-3 control-label">{tmpl_var name='ns_txt'}</label>
                 <div class="col-sm-9">
-					<input type="text" name="ns" id="ns" value="{tmpl_var name='ns'}" class="form-control" />
+					<input type="search" name="ns" id="ns" value="{tmpl_var name='ns'}" class="form-control" autocomplete="off" />
 					<p class="formHint">{tmpl_var name='ipv4_form_txt'}</p>
 				</div>
             </div>
             <div class="form-group">
                 <label for="xfer" class="col-sm-3 control-label">{tmpl_var name='xfer_txt'}</label>
-                <div class="col-sm-9"><input type="text" name="xfer" id="xfer" value="{tmpl_var name='xfer'}" class="form-control" /></div></div>
+                <div class="col-sm-9"><input type="search" name="xfer" id="xfer" value="{tmpl_var name='xfer'}" class="form-control" autocomplete="off" /></div></div>
             <div class="form-group">
                 <label class="col-sm-3 control-label">{tmpl_var name='active_txt'}</label>
                 <div class="col-sm-9">
@@ -72,11 +72,11 @@
         </div></div>
 <script language="JavaScript" type="text/javascript">
     jQuery('#ns').ispconfigSearch({
-        dataSrc: '/dns/ajax_get_json.php?type=get_ipv4',
+        dataSrc: '/dns/ajax_get_json.php?type=get_ipv4&context=dns_slave_ns',
         resultsLimit: '$ <tmpl_var name="globalsearch_resultslimit_of_txt"> % <tmpl_var name="globalsearch_resultslimit_results_txt">',
         ResultsTextPrefix: '<tmpl_var name="globalsearch_suggestions_text_txt">',
         noResultsText: '<tmpl_var name="globalsearch_noresults_text_txt">',
-        noResultsLimit: '<tmpl_var name="globalsearch_noresults_limit_txt">',
+        noResultsLimit: '',
         minChars: 0,
         cssPrefix: 'df-',
         fillSearchField: true,
@@ -85,11 +85,11 @@
         resultBoxPosition: ''
     });
     jQuery('#xfer').ispconfigSearch({
-        dataSrc: '/dns/ajax_get_json.php?type=get_ipv4',
+        dataSrc: '/dns/ajax_get_json.php?type=get_ipv4&context=dns_slave_xfer',
         resultsLimit: '$ <tmpl_var name="globalsearch_resultslimit_of_txt"> % <tmpl_var name="globalsearch_resultslimit_results_txt">',
         ResultsTextPrefix: '<tmpl_var name="globalsearch_suggestions_text_txt">',
         noResultsText: '<tmpl_var name="globalsearch_noresults_text_txt">',
-        noResultsLimit: '<tmpl_var name="globalsearch_noresults_limit_txt">',
+        noResultsLimit: '',
         minChars: 0,
         cssPrefix: 'df-',
         fillSearchField: true,

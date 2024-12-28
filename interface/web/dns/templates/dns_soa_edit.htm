@@ -184,11 +184,11 @@
 </div>
 <script language="JavaScript" type="text/javascript">
   jQuery('#xfer').ispconfigSearch({
-    dataSrc: '/dns/ajax_get_json.php?type=get_ipv4',
+    dataSrc: '/dns/ajax_get_json.php?type=get_ipv4&context=dns_soa_xfer',
     resultsLimit: '$ <tmpl_var name="globalsearch_resultslimit_of_txt"> % <tmpl_var name="globalsearch_resultslimit_results_txt">',
     ResultsTextPrefix: '<tmpl_var name="globalsearch_suggestions_text_txt">',
     noResultsText: '<tmpl_var name="globalsearch_noresults_text_txt">',
-    noResultsLimit: '<tmpl_var name="globalsearch_noresults_limit_txt">',
+    noResultsLimit: '',
     minChars: 0,
     cssPrefix: 'df-',
     fillSearchField: true,
@@ -197,11 +197,11 @@
     resultBoxPosition: ''
   });
   jQuery('#also_notify').ispconfigSearch({
-    dataSrc: '/dns/ajax_get_json.php?type=get_ipv4',
+    dataSrc: '/dns/ajax_get_json.php?type=get_ipv4&context=dns_soa_also_notify',
     resultsLimit: '$ <tmpl_var name="globalsearch_resultslimit_of_txt"> % <tmpl_var name="globalsearch_resultslimit_results_txt">',
     ResultsTextPrefix: '<tmpl_var name="globalsearch_suggestions_text_txt">',
     noResultsText: '<tmpl_var name="globalsearch_noresults_text_txt">',
-    noResultsLimit: '<tmpl_var name="globalsearch_noresults_limit_txt">',
+    noResultsLimit: '',
     minChars: 0,
     cssPrefix: 'df-',
     fillSearchField: true,
