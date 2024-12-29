@@ -121,6 +121,7 @@ add_web_users_to_sshusers_group=y
 connect_userid_to_webid=n
 connect_userid_to_webid_start=10000
 web_folder_protection=y
+web_folder_permission=0710
 php_ini_check_minutes=1
 overtraffic_disable_web=y
 overquota_notify_threshold=90

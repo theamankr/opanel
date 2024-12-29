@@ -182,6 +182,7 @@ $wb['do_not_try_rescue_mail_txt'] = 'Desabilitar monitoramento do servidor de em
 $wb['rescue_description_txt'] = '<b>Informação:</b> Se o serviço MySQL for desligado e estiver selecionado "Desabilitar monitoramento do MySQL" aguarde entre 2 e 3 minutos sem abandonar a aba. <br>Se não aguardar o sistema de recuperação de falhas tentará reiniciar o MySQL!';
 $wb['enable_sni_txt'] = 'Habilitar SNI';
 $wb['set_folder_permissions_on_update_txt'] = 'Configurar permissões de pasta quando atualizar';
+$wb['incorrect_permissions_regex'] = 'Incorrect permissions string';
 $wb['add_web_users_to_sshusers_group_txt'] = 'Adicionar novos usuários Web para o grupo SSH';
 $wb['connect_userid_to_webid_txt'] = 'Conectar o UID do usuário no sistema para webID';
 $wb['connect_userid_to_webid_start_txt'] = 'Conexão do ID inicial do usuário com o webID';

@@ -168,6 +168,7 @@ $wb['rescue_description_txt'] = '<b>Информация:</b> Если вы хо
 $wb['enable_sni_txt'] = 'Включить SNI';
 $wb['do_not_try_rescue_httpd_txt'] = 'Отключить мониторинг HTTPD';
 $wb['set_folder_permissions_on_update_txt'] = 'Установить разрешения для папки на обновления';
+$wb['incorrect_permissions_regex'] = 'Incorrect permissions string';
 $wb['add_web_users_to_sshusers_group_txt'] = 'Добавить веб-пользователей в группу -sshusers-';
 $wb['connect_userid_to_webid_txt'] = 'Связать ID пользователя Linux (UserID/) с веб-идентификатором WebID';
 $wb['connect_userid_to_webid_start_txt'] = 'Начальный ID для связки UserID/WebID';

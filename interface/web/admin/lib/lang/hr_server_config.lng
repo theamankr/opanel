@@ -168,6 +168,7 @@ $wb['rescue_description_txt'] = '<b>Informacija:</b> Ako želite ugasiti mysql m
 $wb['enable_sni_txt'] = 'Omogući SNI';
 $wb['do_not_try_rescue_httpd_txt'] = 'Isključi HTTPD monitoriranje';
 $wb['set_folder_permissions_on_update_txt'] = 'Postavi dozvole pri svakoj nadogradnji ISPConfiga';
+$wb['incorrect_permissions_regex'] = 'Incorrect permissions string';
 $wb['add_web_users_to_sshusers_group_txt'] = 'Dodaj web korisnikeu -sshusers- grupu';
 $wb['connect_userid_to_webid_txt'] = 'Spoji Linux userid u webid';
 $wb['connect_userid_to_webid_start_txt'] = 'Početni ID za spajanje userid/webid-a';

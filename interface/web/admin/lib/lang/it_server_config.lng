@@ -156,6 +156,7 @@ $wb['do_not_try_rescue_mail_txt'] = 'Disabilita monitoraggio Email';
 $wb['rescue_description_txt'] = '<b>Informazione:</b> Se desideri fermare MySQL devi selezionare la spunta per Disabilitare monitor MySQL ed attendere 2-3 minuti.<br>Se non attendi 2-3 minuti, il sistema tenterà di riavviare MySQL!';
 $wb['enable_sni_txt'] = 'Abilita SNI';
 $wb['set_folder_permissions_on_update_txt'] = 'Imposta permessi cartella ad aggiornamento';
+$wb['incorrect_permissions_regex'] = 'Incorrect permissions string';
 $wb['add_web_users_to_sshusers_group_txt'] = 'Aggiungi utente sito web a gruppo utenti -ssh-';
 $wb['connect_userid_to_webid_txt'] = 'Collega userid Linux a webid';
 $wb['connect_userid_to_webid_start_txt'] = 'Avvia ID per collegamento userid/webid';

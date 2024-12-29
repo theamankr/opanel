@@ -255,6 +255,7 @@ $wb['rescue_description_txt'] = '<b>Información:</b> Si desea detener el servic
 $wb['security_level_txt'] = 'Nivel de seguridad';
 $wb['server_type_txt'] = 'Tipo de servidor';
 $wb['set_folder_permissions_on_update_txt'] = 'Establecer permisos de carpetas al actualizar';
+$wb['incorrect_permissions_regex'] = 'Incorrect permissions string';
 $wb['ssl_settings_txt'] = 'Opciones de SSL';
 $wb['try_rescue_txt'] = 'Habilitar monitorización y reinicio en caso de fallo';
 $wb['ufw_default_application_policy_txt'] = 'Directiva predeterminada de aplicación';

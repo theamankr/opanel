@@ -189,6 +189,7 @@ $wb['do_not_try_rescue_mail_txt'] = '禁用电子邮件监视';
 $wb['rescue_description_txt'] = '如果要关闭MySQL，必须选择“禁用MySQL监视”复选框，然后等待2-3分钟。如果不等待2-3分钟，救援将尝试重新启动MySQL！';
 $wb['enable_sni_txt'] = '启用SNI';
 $wb['set_folder_permissions_on_update_txt'] = '更新时设置文件夹权限';
+$wb['incorrect_permissions_regex'] = 'Incorrect permissions string';
 $wb['add_web_users_to_sshusers_group_txt'] = '将Web用户添加到-sshusers-组中';
 $wb['connect_userid_to_webid_txt'] = '将Linux用户ID连接到Web ID';
 $wb['connect_userid_to_webid_start_txt'] = '用户ID / Web ID连接的起始ID';
