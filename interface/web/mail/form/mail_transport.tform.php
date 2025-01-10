@@ -94,6 +94,12 @@ $form["tabs"]['transport'] = array (
 					'class' => 'validate_mail_transport',
 					'function' => 'validate_domain',
 					'errmsg'=> 'domain_error_unique',
+				),
+				1 => array(
+					'type' => 'CUSTOM',
+					'class' => 'validate_mail_transport',
+					'function' => 'validate_isnot_maildomain',
+					'errmsg' => 'domain_is_maildomain',
 				)
 			),
 			'default' => '',

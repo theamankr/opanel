@@ -24,3 +24,4 @@ $wb['dkim_auto_dns_txt'] = 'Managed zone, dns updated automatically';
 $wb['relayhost_txt'] = 'Relayhost';
 $wb['relayhost_user_txt'] = 'Relayhost User';
 $wb['relayhost_password_txt'] = 'Relayhost Password';
+$wb['domain_is_transport'] = 'The Domain is already set as E-Mail Transport.';

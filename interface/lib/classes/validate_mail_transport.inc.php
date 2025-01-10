@@ -41,6 +41,40 @@ class validate_mail_transport {
 		}
 	}
 
+	/* Validator function for checking that the 'domain' is not already set as mail_domain */
+	function validate_isnot_maildomain($field_name, $field_value, $validator) {
+		global $app, $conf;
+
+		if(isset($app->remoting_lib->primary_id)) {
+			$id = $app->remoting_lib->primary_id;
+		} else {
+			$id = $app->tform->primary_id;
+		}
+
+		$sql = "SELECT domain_id, domain FROM mail_domain WHERE domain = ? AND domain_id != ?";
+		$domain_check = $app->db->queryOneRecord($sql, $field_value, $id);
+
+		if($domain_check) return $this->get_error('domain_is_maildomain');
+
+	}
+
+	/* Validator function for checking that the 'domain' is not already set as mail_transport */
+	function validate_isnot_mailtransport($field_name, $field_value, $validator) {
+		global $app, $conf;
+
+		if(isset($app->remoting_lib->primary_id)) {
+			$id = $app->remoting_lib->primary_id;
+		} else {
+			$id = $app->tform->primary_id;
+		}
+
+		$sql = "SELECT transport_id, domain FROM mail_transport WHERE domain = ? AND transport_id != ?";
+		$domain_check = $app->db->queryOneRecord($sql, $field_value, $id);
+
+		if($domain_check) return $this->get_error('domain_is_transport');
+
+	}
+
 	/* Validator function for checking the 'domain' of a mail transport */
 	function validate_domain($field_name, $field_value, $validator) {
 		global $app, $conf;
@@ -52,8 +86,8 @@ class validate_mail_transport {
 		}
 
 		// mail_transport.domain (could also be an email address) must be unique per server
-		$sql = "SELECT transport_id, domain FROM mail_transport WHERE domain = ? AND server_id = ? AND transport_id != ?";
-		$domain_check = $app->db->queryOneRecord($sql, $field_value, $app->tform_actions->dataRecord['server_id'], $id);
+		$sql = "SELECT transport_id, domain FROM mail_transport WHERE domain = ? AND transport_id != ?";
+		$domain_check = $app->db->queryOneRecord($sql, $field_value, $id);
 
 		if($domain_check) return $this->get_error('domain_error_unique');
 	}
