@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright (c) 2007, Till Brehm, projektfarm Gmbh
+Copyright (c) 2025, Till Brehm, projektfarm Gmbh
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -43,6 +43,7 @@ $conf['init_scripts'] = '/etc/init.d';
 $conf['runlevel'] = '/etc';
 $conf['shells'] = '/etc/shells';
 $conf['pam'] = '/etc/pam.d';
+$conf['default_php'] = "8.2";
 
 //* Services provided by this server, this selection will be overridden by the expert mode
 $conf['services']['mail'] = true;
@@ -91,8 +92,8 @@ $conf['apache']['vhost_conf_dir'] = $conf['apache']['config_dir'] . '/vhosts.d';
 $conf['apache']['vhost_conf_enabled_dir'] = $conf['apache']['vhost_conf_dir'];
 $conf['apache']['vhost_default'] = '00_default_vhost.conf';
 $conf['apache']['vhost_port'] = '8080';
-$conf['apache']['php_ini_path_apache'] = '/etc/php/apache2-php7.4/php.ini';
-$conf['apache']['php_ini_path_cgi'] = '/etc/php/cgi-php7.4/php.ini';
+$conf['apache']['php_ini_path_apache'] = '/etc/php/apache2-php8.2/php.ini';
+$conf['apache']['php_ini_path_cgi'] = '/etc/php/cgi-php8.2/php.ini';
 
 //* Website base settings
 $conf['web']['website_basedir'] = '/var/www';
@@ -113,7 +114,7 @@ $conf['awstats']['pl'] = '/usr/bin/awstats.pl';
 $conf['awstats']['buildstaticpages_pl'] = '/usr/bin/awstats_buildstaticpages.pl';
 
 //* Fastcgi
-$conf['fastcgi']['fastcgi_phpini_path'] = '/etc/php/cgi-php7.4';
+$conf['fastcgi']['fastcgi_phpini_path'] = '/etc/php/cgi-php8.2';
 $conf['fastcgi']['fastcgi_starter_path'] = '/var/www/php-fcgi-scripts/[system_user]/';
 $conf['fastcgi']['fastcgi_bin'] = '/usr/bin/php-cgi';
 
@@ -167,6 +168,7 @@ $conf['saslauthd']['init_script'] = 'saslauthd';
 //* Amavisd
 $conf['amavis']['installed'] = false; // will be detected automatically during installation
 $conf['amavis']['config_file'] = '/etc/amavisd.conf';
+$conf['amavis']['config_dir'] = '/etc';
 $conf['amavis']['init_script'] = 'amavisd';
 
 //* Rspamd
@@ -245,7 +247,7 @@ $conf['bastille']['config_dir'] = '/etc/Bastille';
 $conf['vlogger']['config_dir'] = '/etc/vlogger';
 
 //* cron
-$conf['cron']['init_script'] = 'vixie-cron';
+$conf['cron']['init_script'] = 'cronie';
 $conf['cron']['crontab_dir'] = '/etc/cron.d';
 $conf['cron']['group'] = 'cron';
 $conf['cron']['wget'] = '/usr/bin/wget';
@@ -259,3 +261,4 @@ $conf['apparmor']['installed'] = false;
 
 
 ?>
+
